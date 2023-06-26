@@ -1,0 +1,656 @@
+.header {
+  display: flex;
+}
+
+.header-text {
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-text > h1 {
+  text-align: center;
+  font-size: 5rem;
+  font-weight: 900;
+  padding-top: 50px;
+}
+
+.header-text > form {
+  display: flex;
+  gap: 15px;
+}
+
+.headerImg {
+  margin-right: 3%;
+  width: 60%;
+}
+
+.name-label {
+  margin: 8px;
+  width: 250px;
+  font-size: 1.25rem;
+}
+
+.titleSlider > h3 {
+  margin-top: 15px;
+}
+
+hr {
+  color: lightgray;
+}
+
+.relevence {
+  background-color: #fff;
+  box-shadow: 4px 4px 25px #e3e3e3;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 510px;
+}
+
+.group-slider {
+  overflow-y: auto;
+  height: 200px;
+}
+
+.slider {
+  margin-left: 15px;
+  appearance: none;
+  /* background-color: rgb(215, 232, 247); */
+  border-radius: 30px;
+}
+
+/* The slider color red orange yellow to green */
+input[type="range"] {
+  width: 22%;
+  background: linear-gradient(
+    90deg,
+    rgb(225, 27, 39, 1) 0%,
+    rgb(255, 140, 0, 1) 25%,
+    rgb(236, 241, 14, 1) 50%,
+    rgb(161, 202, 68, 1) 75%,
+    rgb(86, 163, 122, 1) 100%
+  );
+  cursor: pointer;
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#3bade3 ', endColorstr='#ff357f ', GradientType=1 );
+  appearance: none;
+  border-radius: 20px;
+  border: 1px solid lightgray;
+  padding: 1px;
+  height: 10px;
+}
+
+/* The relevance slider in organizer view: white to gray to black*/
+input[type="range"].relevanceSlider{
+  background: linear-gradient(
+    90deg,
+    rgb(255, 255, 255) 1%,
+    rgb(135, 135, 135) 51%,
+    rgb(28, 28, 28) 100%
+  );
+}
+
+
+.slider-value {
+  display: inline-block;
+  background-color: #e6edf3;
+  border-radius: 10%;
+  padding: 2px 10px;
+  margin: 0 0 10px 10px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  width: 15px;
+  -webkit-appearance: none;
+  height: 15px;
+  border-radius: 20px;
+  background-color: #f3f3f3;
+  box-shadow: 0.5px 0.5px 1px #c6c6c6;
+}
+
+.attendee-block {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  overflow-y: auto;
+  max-width: 510px;
+  height: 100%;
+  max-height: 325px;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 4px 4px 25px #e3e3e3;
+  border-radius: 8px;
+}
+
+.meeting-block {
+  display: flex;
+  justify-content: center;
+  /* border: 0.5px solid aliceblue; */
+  zoom: 1;
+  /* vertical-align: top; */
+  width: 100%;
+  height: 100%;
+  /* max-height: 800px; */
+  padding: 19px;
+  font: inherit;
+  background: #f8fbff;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.meeting-time {
+  display: inline-block;
+  zoom: 1;
+  width: 100px;
+  margin-right: 5px;
+  vertical-align: bottom;
+  align-self: flex-end;
+  text-align: center;
+  background-color: #e6edf3;
+}
+
+.features .attendee-block .meeting-time {
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.weekly {
+  display: inline-block;
+  zoom: 1;
+  vertical-align: top;
+  border-radius: 5px;
+}
+
+.days {
+  display: flex;
+  justify-content: center;
+  margin: 0 2px 5px 2px;
+  background-color: #e6edf3;
+  color: #484848;
+  font-weight: 700;
+}
+
+.day {
+  width: 100%;
+  text-align: center;
+}
+
+.time {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #484848;
+  height: 30px;
+  font-weight: 700;
+}
+
+.GridSlots {
+  background-color: white;
+  display: inline;
+}
+
+.GridLine {
+  font-size: 0px;
+  vertical-align: top;
+}
+
+.GridSquare {
+  vertical-align: top;
+  display: inline-block;
+  zoom: 1;
+  width: 75px;
+  height: 30px;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+  color: white;
+  background-color: #56a37a;
+  border-top: 0.5px solid #e6edf3;
+  border-radius: 2px;
+  margin: 0 2px 0 2px;
+}
+
+/* this is for just the attendee */
+
+.attendee-block .GridSquare {
+  width: 30px;
+  height: 23px;
+}
+.attendee-block .time {
+  height: 23px;
+}
+
+.GridSquare:hover {
+  cursor: pointer;
+}
+
+#aaName {
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 1%;
+}
+
+.attendee-submit,
+.goAttendee,
+.goOrganizer {
+  all: unset;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px 15px;
+  border: 0.5px solid lightgray;
+  border-radius: 75px;
+  color: black;
+  transition: background-color 0.3s, color 0.2s;
+}
+
+.attendee-submit {
+  margin: 20px;
+}
+
+.goAttendee,
+.goOrganizer {
+  text-align: center;
+  display: inline-block;
+  margin: 4px 2px;
+}
+
+.goOrganizer:hover {
+  background-color: #0b2d39;
+  color: white;
+}
+
+.goAttendee:hover {
+  background-color: #0b2d39;
+  color: white;
+}
+
+.attendeeName {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+input[type="text"] {
+  border: 0.5px solid lightgray;
+  border-radius: 75px;
+  text-align: center;
+  font-size: 2rem;
+}
+
+.attendee-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.winAtt {
+  all: unset;
+  font-weight: 700;
+  font-size: 1.5rem;
+  padding: 8px 15px;
+  border: 0.5px solid lightgray;
+  border-radius: 75px;
+  color: black;
+  transition: background-color 0.3s, color 0.2s;
+}
+
+.winAtt:hover {
+  background-color: #0b2d39;
+  color: white;
+}
+
+.submit-area {
+  display: flex;
+  justify-content: center;
+  margin-top: 25px;
+  color: #484848;
+}
+
+.attendee-submit:hover {
+  background-color: #0b2d39;
+  color: white;
+}
+
+.verified {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+
+.verified .tooltiptext {
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  top: -5px;
+  left: 110%;
+}
+
+.verified .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  margin-top: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent black transparent transparent;
+}
+
+.verified:hover .tooltiptext {
+  visibility: visible;
+}
+
+h3 {
+  /* center */
+  text-align: center;
+}
+
+/* slit the features and organizer-block */
+.features {
+  display: flex;
+  flex-flow: column;
+  /* align-items: flex-end; */
+  /* width: 35%; */
+  align-items: center;
+  width: fit-content;
+  gap: 30px;
+}
+
+.spacer {
+  width: 5%;
+}
+
+/* div that holds the 2 schedules */
+.schedule-blocks {
+  display: flex;
+  flex-flow: column;
+  gap: 30px;
+}
+
+/* style for the 2 schedules */
+.ogranizer-block,
+.ogranizer-block-2 {
+  background: #fff;
+  height: fit-content;
+  width: fit-content;
+  overflow-x: scroll;
+  white-space: nowrap;
+  padding: 20px 20px 0 20px;
+  box-shadow: 4px 4px 25px #e3e3e3;
+  border-radius: 10px;
+}
+
+/* custom scrollbar */
+::-webkit-scrollbar {
+  width: 20px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d6dee1;
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #a8bbbf;
+}
+
+/* popup confirmation */
+.confirmation-box {
+  position: fixed; /* Position the box relative to the viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(
+    0,
+    0,
+    0,
+    0.5
+  ); /* Add a semi-transparent background color */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.confirmation-box-inner {
+  background-color: white; /* Add a background color to the inner box */
+  padding: 2rem; /* Add some padding to the inner box */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+  border-radius: 20px;
+}
+
+.confirmation-button {
+  display: flex;
+  gap: 10px;
+}
+
+.confirmation-button input[type="text"] {
+  font-size: 1rem;
+}
+
+.confirmation-box-close {
+  position: absolute; /* Position the close button absolutely */
+  top: 0.5rem;
+  right: 0.5rem;
+  background-color: transparent; /* Make the button transparent */
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: color 0.25s;
+}
+
+.confirmation-box-close:hover {
+  color: red; /* Change the color of the button on hover */
+}
+
+.confirmation-box p {
+  margin-bottom: 1rem; /* Add some spacing between the text and the buttons */
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.confirmation-box button {
+  margin: 0;
+}
+
+.confirmation-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: black;
+}
+
+/* Media Queries */
+
+@media screen and (max-width: 2560px) {
+  .header-text > h1 {
+    font-size: 8rem;
+  }
+
+  .goAttendee,
+  .goOrganizer {
+    font-size: 2rem;
+  }
+}
+
+@media screen and (max-width: 1440px) {
+  .header-text > h1 {
+    font-size: 5.25rem;
+  }
+
+  .goAttendee,
+  .goOrganizer {
+    font-size: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 1150px) {
+  .header-text > h1 {
+    font-size: 5.25rem;
+  }
+
+  .goAttendee,
+  .goOrganizer {
+    font-size: 1.5rem;
+  }
+
+  .meeting-block {
+    flex-flow: column-reverse;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .attendee-block > .meeting-block {
+    display: block;
+    margin-left: 40px;
+  }
+
+  .features .attendee-block .meeting-time {
+    margin-bottom: 0;
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  .header-text {
+    margin-left: 3%;
+  }
+
+  .header-text > h1 {
+    font-size: 4.25rem;
+  }
+
+  .goAttendee,
+  .goOrganizer {
+    font-size: 1rem;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .header-text > h1 {
+    font-size: 3.5rem;
+  }
+
+  .attendee-input {
+    flex-flow: column;
+  }
+
+  .goAttendee,
+  .goOrganizer {
+    font-size: 1rem;
+  }
+
+  .meeting-block {
+    flex-flow: column-reverse;
+    align-items: center;
+  }
+
+  .attendee-block {
+    margin: 20px 0;
+  }
+
+  .attendee-block > .meeting-block {
+    display: block;
+    margin-left: 40px;
+  }
+}
+
+@media screen and (max-width: 750px) {
+  .GridSquare {
+    width: 65px;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  .header {
+    flex-flow: column-reverse;
+    align-items: center;
+  }
+
+  .header-text {
+    margin-left: 0;
+    margin-bottom: 20%;
+  }
+
+  .header-text > h1 {
+    font-size: 3.5rem;
+    padding-top: 25px;
+  }
+
+  .headerImg {
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .goAttendee,
+  .goOrganizer {
+    font-size: 1rem;
+  }
+}
+
+@media screen and (max-width: 650px) {
+  .GridSquare {
+    width: 55px;
+  }
+}
+
+@media screen and (max-width: 560px) {
+  .GridSquare {
+    width: 48px;
+  }
+}
+
+@media screen and (max-width: 530px) {
+  .meeting-block {
+    width: 110%;
+  }
+}
+
+@media screen and (max-width: 475px) {
+  .meeting-block {
+    width: 130%;
+  }
+
+  .GridSquare {
+    width: 45px;
+    height: 30px;
+  }
+}
+
+@media screen and (max-width: 375px) {
+  .meeting-block {
+    width: 145%;
+  }
+}
+
+@media screen and (max-width: 320px) {
+  .header-text > h1 {
+    font-size: 3rem;
+    padding-top: 25px;
+  }
+
+  .meeting-block {
+    width: 170%;
+  }
+}
