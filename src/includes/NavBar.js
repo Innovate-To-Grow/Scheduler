@@ -8,7 +8,7 @@ function Navbar() {
         // create a navbar with links to the home, organizer, and attendee pages that is responsive
         <nav className="navbar navbar-expand-lg navbar-light bg-light">
             <div className="container-fluid">
-                <NavLink className="navbar-brand" to="/">
+                <NavLink className="navbar-brand" to="/scheduler">
                     <span className="navbar-text">NavBar</span>
                 </NavLink>
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -17,13 +17,13 @@ function Navbar() {
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav">
                         <li className="nav-item">
-                            <NavLink className="nav-link" aria-current="page" to="/">Home</NavLink>
+                            <NavLink className="nav-link" aria-current="page" to="/scheduler">Home</NavLink>
                         </li>
                         <li className="nav-item">
-                            <NavLink className="nav-link" aria-current="page" to="/organizer">Organizer</NavLink>
+                            <NavLink className="nav-link" aria-current="page" to="/scheduler/organizer">Organizer</NavLink>
                         </li>
                         <li className="nav-item">
-                            <NavLink className="nav-link" to="/attendee">Attendee</NavLink>
+                            <NavLink className="nav-link" to="/scheduler/attendee">Attendee</NavLink>
                         </li>
                         
                     </ul>
