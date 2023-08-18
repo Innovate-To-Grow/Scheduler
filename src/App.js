@@ -21,6 +21,8 @@ function App() {
           <Route path="/scheduler" element={<Home />} />
           <Route path="/scheduler/organizer" element={<Organizer />} />
           <Route path="/scheduler/attendee" element={<Attendee />} />
+          {/* Catch-all route for 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AttendeeContext.Provider>
     </div>
