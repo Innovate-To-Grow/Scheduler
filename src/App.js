@@ -21,10 +21,16 @@ function App() {
           <Route path="/scheduler" element={<Home />} />
           <Route path="/scheduler/organizer" element={<Organizer />} />
           <Route path="/scheduler/attendee" element={<Attendee />} />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </AttendeeContext.Provider>
     </div>
   );
+}
+
+function NotFound() {
+  return <h1>404 - Not Found</h1>;
 }
 
 export default App;
