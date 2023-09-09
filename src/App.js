@@ -18,9 +18,9 @@ function App() {
         value={{ attendeeDataChanged, setAttendeeDataChanged }}
       >
         <Routes>
-          <Route path="/scheduler" element={<Home />} />
-          <Route path="/scheduler/organizer" element={<Organizer />} />
-          <Route path="/scheduler/attendee" element={<Attendee />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/organizer" element={<Organizer />} />
+          <Route path="/attendee" element={<Attendee />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
