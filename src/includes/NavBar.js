@@ -1,36 +1,30 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
-import 'bootstrap/dist/css/bootstrap.min.css';
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 
 function Navbar() {
     return (
-        // create a navbar with links to the home, organizer, and attendee pages that is responsive
-        <nav className="navbar navbar-expand-lg navbar-light bg-light">
-            <div className="container-fluid">
-                <NavLink className="navbar-brand" to="/scheduler">
-                    <span className="navbar-text">NavBar</span>
-                </NavLink>
-                <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span className="navbar-toggler-icon"></span>
-                </button>
-                <div className="collapse navbar-collapse" id="navbarNav">
-                    <ul className="navbar-nav">
-                        <li className="nav-item">
-                            <NavLink className="nav-link" aria-current="page" to="/">Home</NavLink>
-                        </li>
-                        <li className="nav-item">
-                            <NavLink className="nav-link" aria-current="page" to="/organizer">Organizer</NavLink>
-                        </li>
-                        <li className="nav-item">
-                            <NavLink className="nav-link" to="/attendee">Attendee</NavLink>
-                        </li>
-                        
-                    </ul>
-                </div>
+        <nav style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 24px',
+            height: '64px',
+            backgroundColor: 'var(--md-sys-color-surface)',
+            color: 'var(--md-sys-color-on-surface)',
+            boxShadow: 'var(--md-sys-elevation-1)',
+            position: 'sticky',
+            top: 0,
+            zIndex: 100
+        }}>
+            <NavLink to="/" style={{ textDecoration: 'none', color: 'var(--md-sys-color-primary)', fontWeight: 'bold', fontSize: '20px', marginRight: '32px', letterSpacing: '-0.5px' }}>
+                Scheduler
+            </NavLink>
+            <div style={{ display: 'flex', gap: '24px' }}>
+                <NavLink to="/" style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? 'var(--md-sys-color-primary)' : 'inherit', fontWeight: isActive ? 'bold' : '500' })}>Home</NavLink>
+                <NavLink to="/organizer" style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? 'var(--md-sys-color-primary)' : 'inherit', fontWeight: isActive ? 'bold' : '500' })}>Organizer</NavLink>
+                <NavLink to="/attendee" style={({ isActive }) => ({ textDecoration: 'none', color: isActive ? 'var(--md-sys-color-primary)' : 'inherit', fontWeight: isActive ? 'bold' : '500' })}>Attendee</NavLink>
             </div>
         </nav>
     );
-};
+}
 
 export default Navbar;

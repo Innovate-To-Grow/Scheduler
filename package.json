@@ -4,11 +4,14 @@
   "private": true,
   "dependencies": {
     "@air/react-drag-to-select": "^5.0.5",
-    "@supabase/supabase-js": "^2.10.0",
+    "@material/web": "^2.4.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "bootstrap": "^5.2.3",
+    "better-sqlite3": "^12.6.2",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
     "jquery": "^3.6.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -20,6 +23,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "server": "node server/index.js",
+    "dev": "concurrently \"npm start\" \"npm run server\"",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
