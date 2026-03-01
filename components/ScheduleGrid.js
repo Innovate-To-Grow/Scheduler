@@ -155,9 +155,7 @@ function ScheduleGrid({
                               ? "1px solid var(--md-sys-color-surface-variant)"
                               : "none",
                           borderLeft:
-                            colPos !== 0
-                              ? "1px solid var(--md-sys-color-surface-variant)"
-                              : "none",
+                            colPos !== 0 ? "1px solid var(--md-sys-color-surface-variant)" : "none",
                           cursor: readOnly ? "default" : "pointer",
                           touchAction: "none",
                           userSelect: "none",

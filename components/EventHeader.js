@@ -30,7 +30,16 @@ function EventHeader({ eventName, eventCode }) {
 
   return (
     <div className="event-header">
-      <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "12px", minWidth: 0 }}>
+      <Link
+        href="/"
+        style={{
+          textDecoration: "none",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          minWidth: 0,
+        }}
+      >
         <Image
           src="/img/i2glogo.png"
           alt="i2G Logo"

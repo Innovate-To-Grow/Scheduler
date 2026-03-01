@@ -2,7 +2,9 @@
   "name": "scheduler",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@material/web": "^2.4.1",
     "better-sqlite3": "^12.6.2",

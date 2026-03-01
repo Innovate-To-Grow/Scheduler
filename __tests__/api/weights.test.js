@@ -100,9 +100,7 @@ describe("GET /api/events/weights?code=", () => {
   });
 
   test("returns 404 for unknown event code", async () => {
-    const res = await getWeights(
-      new Request(`http://localhost/api/events/weights?code=XXXXXXXX`)
-    );
+    const res = await getWeights(new Request(`http://localhost/api/events/weights?code=XXXXXXXX`));
     expect(res.status).toBe(404);
   });
 });
@@ -177,9 +175,7 @@ describe("PUT /api/events/weights?code=", () => {
   });
 
   test("returns 400 when a weight is out of range", async () => {
-    const res = await updateWeights(
-      makeReq({ weights: [{ name: "Alice", weight: 1.5 }] })
-    );
+    const res = await updateWeights(makeReq({ weights: [{ name: "Alice", weight: 1.5 }] }));
     expect(res.status).toBe(400);
   });
 });

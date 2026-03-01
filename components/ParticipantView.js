@@ -99,7 +99,10 @@ function ParticipantView() {
 
   const handleJoin = async (joinName) => {
     const n = (joinName ?? name).trim();
-    if (!n) { setJoinError("Name is required"); return; }
+    if (!n) {
+      setJoinError("Name is required");
+      return;
+    }
     setJoinError("");
     try {
       const { participant } = await joinEvent(event.code, n);

@@ -75,7 +75,9 @@ function EventPage() {
           <p style={{ color: "var(--md-sys-color-on-surface-variant)" }}>
             {error || "This event does not exist."}
           </p>
-          <Link href="/"><AppButton>Create New Event</AppButton></Link>
+          <Link href="/">
+            <AppButton>Create New Event</AppButton>
+          </Link>
         </div>
       </div>
     );

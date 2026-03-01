@@ -8,10 +8,7 @@ jest.mock("@/lib/db", () => {
   return { db, initDatabase: jest.fn() };
 });
 
-import {
-  GET as getParticipants,
-  POST as joinEvent,
-} from "@/app/api/events/participants/route";
+import { GET as getParticipants, POST as joinEvent } from "@/app/api/events/participants/route";
 import {
   DELETE as deleteParticipant,
   PUT as updateParticipant,
