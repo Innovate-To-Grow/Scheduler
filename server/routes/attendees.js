@@ -2,6 +2,24 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../db/database');
 
+const SCHEDULE_SLOTS = 63;
+const MAX_NAME_LENGTH = 200;
+
+function isValidSchedule(schedule) {
+    try {
+        const parsed = typeof schedule === 'string' ? JSON.parse(schedule) : schedule;
+        return Array.isArray(parsed) && parsed.length === SCHEDULE_SLOTS &&
+            parsed.every(v => typeof v === 'number' && v >= 0 && v <= 1);
+    } catch {
+        return false;
+    }
+}
+
+function normalizeSchedule(schedule) {
+    if (typeof schedule === 'string') return schedule;
+    return JSON.stringify(schedule);
+}
+
 // GET all attendees
 router.get('/', (req, res) => {
     try {
@@ -9,7 +27,8 @@ router.get('/', (req, res) => {
         const attendees = stmt.all();
         res.json({ attendees });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('GET /attendees error:', err);
+        res.status(500).json({ error: 'Failed to fetch attendees' });
     }
 });
 
@@ -26,7 +45,8 @@ router.get('/:name', (req, res) => {
             res.status(404).json({ error: 'Attendee not found' });
         }
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('GET /attendees/:name error:', err);
+        res.status(500).json({ error: 'Failed to fetch attendee' });
     }
 });
 
@@ -35,13 +55,25 @@ router.post('/', (req, res) => {
     try {
         const { name, schedule, submitted } = req.body;
 
-        if (!name) {
-            return res.status(400).json({ error: 'Name is required' });
+        if (!name || typeof name !== 'string') {
+            return res.status(400).json({ error: 'Name is required and must be a string' });
         }
 
-        const defaultSchedule = JSON.stringify(Array(63).fill(1));
-        const sched = schedule !== undefined ? schedule : defaultSchedule;
-        const isSubmitted = submitted !== undefined ? submitted : 0;
+        if (name.length > MAX_NAME_LENGTH) {
+            return res.status(400).json({ error: `Name must be ${MAX_NAME_LENGTH} characters or fewer` });
+        }
+
+        const defaultSchedule = JSON.stringify(Array(SCHEDULE_SLOTS).fill(1));
+        let sched = defaultSchedule;
+
+        if (schedule !== undefined) {
+            if (!isValidSchedule(schedule)) {
+                return res.status(400).json({ error: `Schedule must be a JSON array of ${SCHEDULE_SLOTS} numbers between 0 and 1` });
+            }
+            sched = normalizeSchedule(schedule);
+        }
+
+        const isSubmitted = (submitted === 1 || submitted === true) ? 1 : 0;
 
         const stmt = db.prepare(`
       INSERT INTO attendee (name, schedule, submitted)
@@ -56,7 +88,8 @@ router.post('/', (req, res) => {
         if (err.code === 'SQLITE_CONSTRAINT_UNIQUE' || err.code === 'SQLITE_CONSTRAINT_PRIMARYKEY') {
             res.status(409).json({ error: 'Attendee already exists' });
         } else {
-            res.status(500).json({ error: err.message });
+            console.error('POST /attendees error:', err);
+            res.status(500).json({ error: 'Failed to create attendee' });
         }
     }
 });
@@ -72,25 +105,28 @@ router.put('/:name', (req, res) => {
             return res.status(404).json({ error: 'Attendee not found' });
         }
 
-        let updateQuery = 'UPDATE attendee SET ';
+        const clauses = [];
         const params = [];
 
         if (schedule !== undefined) {
-            updateQuery += 'schedule = ?, ';
-            params.push(schedule);
+            if (!isValidSchedule(schedule)) {
+                return res.status(400).json({ error: `Schedule must be a JSON array of ${SCHEDULE_SLOTS} numbers between 0 and 1` });
+            }
+            clauses.push('schedule = ?');
+            params.push(normalizeSchedule(schedule));
         }
 
         if (submitted !== undefined) {
-            updateQuery += 'submitted = ?, ';
-            params.push(submitted);
+            const val = (submitted === 1 || submitted === true) ? 1 : 0;
+            clauses.push('submitted = ?');
+            params.push(val);
         }
 
-        if (params.length === 0) {
+        if (clauses.length === 0) {
             return res.json(existing);
         }
 
-        updateQuery = updateQuery.slice(0, -2); // remove last comma
-        updateQuery += ' WHERE name = ?';
+        const updateQuery = `UPDATE attendee SET ${clauses.join(', ')} WHERE name = ?`;
         params.push(name);
 
         db.prepare(updateQuery).run(...params);
@@ -98,7 +134,8 @@ router.put('/:name', (req, res) => {
         const updated = db.prepare('SELECT * FROM attendee WHERE name = ?').get(name);
         res.json(updated);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('PUT /attendees/:name error:', err);
+        res.status(500).json({ error: 'Failed to update attendee' });
     }
 });
 

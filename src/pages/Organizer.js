@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, { useState, useEffect, useContext, useRef, useMemo } from "react";
 import { GoVerified, GoUnverified } from "react-icons/go";
 import AttendeeContext from "../includes/AttendeeContext";
 import { fetchAttendees, createAttendee } from "../api/attendees";
+import { lerpColor, SCHEDULE_SLOTS } from "../utils/colorUtils";
 import '@material/web/slider/slider.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/button/outlined-button.js';
@@ -25,10 +26,16 @@ function Organizer() {
       try {
         const data = await fetchAttendees();
         if (data.attendees) {
-          const parsedAttendees = data.attendees.map(a => ({
-            ...a,
-            scheduleArray: (JSON.parse(a.schedule) || Array(63).fill(1)).map(Number)
-          }));
+          const parsedAttendees = data.attendees.map(a => {
+            let scheduleArray = Array(SCHEDULE_SLOTS).fill(1);
+            try {
+              const parsed = JSON.parse(a.schedule);
+              if (Array.isArray(parsed) && parsed.length === SCHEDULE_SLOTS) {
+                scheduleArray = parsed.map(Number);
+              }
+            } catch { /* use default */ }
+            return { ...a, scheduleArray };
+          });
           setAttendees(parsedAttendees);
 
           setRelevances(prev => {
@@ -57,31 +64,6 @@ function Organizer() {
     }
   }, [showDialog]);
 
-  const color0 = "#ffb4ab";
-  const color1 = "#ffdea3";
-  const color2 = "#82d3a2";
-
-  function RBG(a, b, amount) {
-    const ar = parseInt(a.substring(1, 3), 16);
-    const ag = parseInt(a.substring(3, 5), 16);
-    const ab = parseInt(a.substring(5, 7), 16);
-    const br = parseInt(b.substring(1, 3), 16);
-    const bg = parseInt(b.substring(3, 5), 16);
-    const bb = parseInt(b.substring(5, 7), 16);
-    const rr = Math.floor(ar * (1 - amount) + br * amount);
-    const rg = Math.floor(ag * (1 - amount) + bg * amount);
-    const rb = Math.floor(ab * (1 - amount) + bb * amount);
-    return `rgb(${rr}, ${rg}, ${rb})`;
-  }
-
-  function lerpColor(a, b, c, amount) {
-    if (amount < 0.5) {
-      return RBG(a, b, amount * 2);
-    } else {
-      return RBG(b, c, (amount - 0.5) * 2);
-    }
-  }
-
   const times = [];
   for (let i = 0; i < 9; i++) {
     const hour = i + 9;
@@ -93,7 +75,7 @@ function Organizer() {
     const name = newNameRef.current?.value;
     if (!name) return;
     try {
-      await createAttendee({ name, schedule: JSON.stringify(Array(63).fill(1)), submitted: 0 });
+      await createAttendee({ name, schedule: JSON.stringify(Array(SCHEDULE_SLOTS).fill(1)), submitted: 0 });
       setAttendeeDataChanged(true);
       setShowDialog(false);
     } catch (err) {
@@ -105,31 +87,28 @@ function Organizer() {
     setRelevances(prev => ({ ...prev, [name]: val }));
   };
 
-  // derived schedules
-  const calculateAverage = () => {
-    if (!attendees.length) return Array(63).fill(0);
-    const total = Array(63).fill(0);
+  // derived schedules (memoized)
+  const averageSchedule = useMemo(() => {
+    if (!attendees.length) return Array(SCHEDULE_SLOTS).fill(0);
+    const total = Array(SCHEDULE_SLOTS).fill(0);
     attendees.forEach(a => {
       a.scheduleArray.forEach((val, idx) => total[idx] += val);
     });
-    return total.map(v => (v / attendees.length).toFixed(2));
-  };
+    return total.map(v => Number((v / attendees.length).toFixed(2)));
+  }, [attendees]);
 
-  const calculateWeightedAverage = () => {
-    if (!attendees.length) return Array(63).fill(0);
-    const total = Array(63).fill(0);
-    let totalWeight = 0;
+  const weightedSchedule = useMemo(() => {
+    if (!attendees.length) return Array(SCHEDULE_SLOTS).fill(0);
+    const total = Array(SCHEDULE_SLOTS).fill(0);
+    let weightSum = 0;
     attendees.forEach(a => {
       const weight = relevances[a.name] || 0;
-      if (weight > 0) totalWeight++;
+      weightSum += weight;
       a.scheduleArray.forEach((val, idx) => total[idx] += val * weight);
     });
-    if (totalWeight === 0) return Array(63).fill(0);
-    return total.map(v => (v / totalWeight).toFixed(2));
-  };
-
-  const averageSchedule = calculateAverage();
-  const weightedSchedule = calculateWeightedAverage();
+    if (weightSum === 0) return Array(SCHEDULE_SLOTS).fill(0);
+    return total.map(v => Number((v / weightSum).toFixed(2)));
+  }, [attendees, relevances]);
 
   const renderGrid = (scheduleArr) => (
     <div style={{ display: 'flex', backgroundColor: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid var(--md-sys-color-outline)' }}>
@@ -149,7 +128,7 @@ function Organizer() {
               return (
                 <div key={idx} style={{
                   height: '32px',
-                  backgroundColor: lerpColor(color0, color1, color2, val),
+                  backgroundColor: lerpColor(val),
                   borderTop: hourIndex !== 0 ? '1px solid var(--md-sys-color-surface-variant)' : 'none',
                   borderLeft: dayIndex !== 0 ? '1px solid var(--md-sys-color-surface-variant)' : 'none',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',

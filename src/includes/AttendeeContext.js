@@ -1,15 +1,5 @@
-import { createContext, useState } from 'react';
+import { createContext } from 'react';
 
-const AttendeeContext = createContext();
-
-export const AttendeeProvider = ({ children }) => {
-  const [attendeeDataChanged, setAttendeeDataChanged] = useState(false);
-
-  return (
-    <AttendeeContext.Provider value={{ attendeeDataChanged, setAttendeeDataChanged }}>
-      {children}
-    </AttendeeContext.Provider>
-  );
-};
+const AttendeeContext = createContext(null);
 
 export default AttendeeContext;

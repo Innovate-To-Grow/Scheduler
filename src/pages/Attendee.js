@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import AttendeeContext from "../includes/AttendeeContext";
 import { fetchAttendee, createAttendee, updateAttendee } from "../api/attendees";
+import { lerpColor, SCHEDULE_SLOTS } from "../utils/colorUtils";
 import '@material/web/slider/slider.js';
 import '@material/web/button/filled-button.js';
 import '@material/web/button/outlined-button.js';
@@ -14,7 +15,7 @@ function Attendee() {
   const searchParams = new URLSearchParams(location.search);
   const name = searchParams.get("name") || "";
 
-  const [schedule, setSchedule] = useState(Array(63).fill(1));
+  const [schedule, setSchedule] = useState(Array(SCHEDULE_SLOTS).fill(1));
   const [sliderValue, setSliderValue] = useState(1);
   const [showDialog, setShowDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +35,7 @@ function Attendee() {
         if (attendee) {
           setExists(true);
           const parsed = JSON.parse(attendee.schedule);
-          if (Array.isArray(parsed) && parsed.length === 63) {
+          if (Array.isArray(parsed) && parsed.length === SCHEDULE_SLOTS) {
             setSchedule(parsed.map(Number));
           }
         }
@@ -52,32 +53,6 @@ function Attendee() {
       dialogRef.current.close();
     }
   }, [showDialog]);
-
-  // More compliant material UI tone variations for busy -> neutral -> free
-  const color0 = "#ffb4ab"; // md-sys-color-error-container
-  const color1 = "#ffdea3"; // custom warning tone
-  const color2 = "#82d3a2"; // softer green / success tone
-
-  function RBG(a, b, amount) {
-    const ar = parseInt(a.substring(1, 3), 16);
-    const ag = parseInt(a.substring(3, 5), 16);
-    const ab = parseInt(a.substring(5, 7), 16);
-    const br = parseInt(b.substring(1, 3), 16);
-    const bg = parseInt(b.substring(3, 5), 16);
-    const bb = parseInt(b.substring(5, 7), 16);
-    const rr = Math.floor(ar * (1 - amount) + br * amount);
-    const rg = Math.floor(ag * (1 - amount) + bg * amount);
-    const rb = Math.floor(ab * (1 - amount) + bb * amount);
-    return `rgb(${rr}, ${rg}, ${rb})`;
-  }
-
-  function lerpColor(a, b, c, amount) {
-    if (amount < 0.5) {
-      return RBG(a, b, amount * 2);
-    } else {
-      return RBG(b, c, (amount - 0.5) * 2);
-    }
-  }
 
   const handleCellClickUpdate = (index, e) => {
     // If it's a mousedown event, update the cell.
@@ -180,7 +155,7 @@ function Attendee() {
                           onMouseMove={(e) => handleCellClickUpdate(idx, e)}
                           style={{
                             height: '32px',
-                            backgroundColor: lerpColor(color0, color1, color2, val),
+                            backgroundColor: lerpColor(val),
                             borderTop: hourIndex !== 0 ? '1px solid var(--md-sys-color-surface-variant)' : 'none',
                             borderLeft: dayIndex !== 0 ? '1px solid var(--md-sys-color-surface-variant)' : 'none',
                             cursor: 'pointer',
@@ -207,12 +182,12 @@ function Attendee() {
 
         <md-dialog ref={dialogRef} onClosed={() => setShowDialog(false)}>
           <div slot="headline">Confirm Submission</div>
-          <form slot="content" id="form-id" method="dialog" style={{ color: 'var(--md-sys-color-on-surface-variant)' }}>
+          <form slot="content" id="attendee-confirm-form" method="dialog" style={{ color: 'var(--md-sys-color-on-surface-variant)' }}>
             Are you sure you want to save your schedule?
           </form>
           <div slot="actions">
-            <md-outlined-button form="form-id" onClick={() => setShowDialog(false)}>Cancel</md-outlined-button>
-            <md-filled-button form="form-id" onClick={confirmSubmit} disabled={isSubmitting ? true : undefined}>
+            <md-outlined-button form="attendee-confirm-form" onClick={() => setShowDialog(false)}>Cancel</md-outlined-button>
+            <md-filled-button form="attendee-confirm-form" onClick={confirmSubmit} disabled={isSubmitting ? true : undefined}>
               {isSubmitting ? "Submitting..." : "Confirm"}
             </md-filled-button>
           </div>

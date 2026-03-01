@@ -7,9 +7,10 @@ if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = path.join(dataDir, 'scheduler.db');
+const dbPath = process.env.DB_PATH || path.join(dataDir, 'scheduler.db');
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
 
 function initDatabase() {
     const schemaPath = path.join(__dirname, 'schema.sql');
@@ -17,6 +18,11 @@ function initDatabase() {
     db.exec(schema);
     console.log('Database initialized');
 }
+
+// Close database on process exit
+process.on('exit', () => {
+    db.close();
+});
 
 module.exports = {
     db,
