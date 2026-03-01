@@ -1,0 +1,24 @@
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { verifyPassword } from "@/lib/crypto";
+
+export async function POST(req) {
+  try {
+    const { code, password } = await req.json();
+
+    if (!code || !password) {
+      return NextResponse.json({ error: "code and password are required" }, { status: 400 });
+    }
+
+    const event = db.prepare("SELECT password_hash FROM event WHERE code = ?").get(code);
+    if (!event) {
+      return NextResponse.json({ error: "Event not found" }, { status: 404 });
+    }
+
+    const valid = verifyPassword(password, event.password_hash);
+    return NextResponse.json({ valid });
+  } catch (err) {
+    const status = err instanceof SyntaxError ? 400 : 500;
+    return NextResponse.json({ error: err.message }, { status });
+  }
+}
