@@ -1,37 +1,43 @@
 # Relevance Weighted Meeting Scheduler
 
-A modern meeting scheduler built with React, Express, and a local SQLite database, using Google's Material Web components for the UI. No login is required—users enter only their name.
+A modern meeting scheduler built with Next.js and SQLite, using Google's Material Web components for the UI. No login is required—users enter only their name.
+
+Organizers create events with configurable days, time ranges, and modes (in-person, virtual, or both). Participants fill in their availability on a schedule grid. Organizers can weight participants by relevance and see a weighted aggregate view.
 
 ## Architecture
-- **Frontend**: React 18, React Router 6, Material Web (Web Components via `@material/web`)
-- **Backend**: Node.js/Express REST API
-- **Database**: Local SQLite using `better-sqlite3`
+
+- **Framework**: Next.js 15 (App Router) — single process for frontend and API
+- **Frontend**: React 18, Material Web (`@material/web`)
+- **Backend**: Next.js API Route Handlers (`app/api/`)
+- **Database**: Local SQLite via `better-sqlite3`
 
 ## Setup & Running
 
 **Install Dependencies:**
+
 ```bash
 npm install
 ```
 
-**Environment Variables:**
-Create a `.env` file based on `.env.example`:
-```
-REACT_APP_API_URL=http://localhost:5000/api
-PORT=5000
-```
+**Development:**
 
-**Development (Frontend & Backend):**
-Run both processes concurrently:
 ```bash
 npm run dev
 ```
 
-The frontend will run on `http://localhost:3000` and the backend will run on `http://localhost:5000`.
+Runs at `http://localhost:3000`. No `.env` file needed — the frontend uses relative API paths and the backend runs in the same process.
 
 **Production:**
-Build the frontend and run the Express server:
+
 ```bash
 npm run build
-npm run server
+npm start
+```
+
+**Testing & Linting:**
+
+```bash
+npm test              # Run Jest test suite
+npm run lint          # Run ESLint
+npm run format:check  # Check Prettier formatting
 ```
