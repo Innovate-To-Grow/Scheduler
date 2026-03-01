@@ -46,6 +46,11 @@ function OrganizerView() {
     weightsRef.current = weights;
   }, [weights]);
   const saveTimer = useRef(null);
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+  }, []);
 
   // Organizer self-schedule state
   const [myName, setMyName] = useState("");
@@ -182,7 +187,6 @@ function OrganizerView() {
       setWeights((prev) => {
         const next = { ...prev };
         delete next[participantName];
-        weightsRef.current = next;
         return next;
       });
 
@@ -434,7 +438,7 @@ function OrganizerView() {
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
-                    readOnly={false}
+                    readOnly={mode === "both" && myActiveTab !== "inperson"}
                     showValues={false}
                     onCellPaint={handleMyInpersonPaint}
                   />
@@ -445,7 +449,7 @@ function OrganizerView() {
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
-                    readOnly={false}
+                    readOnly={mode === "both" && myActiveTab !== "virtual"}
                     showValues={false}
                     onCellPaint={handleMyVirtualPaint}
                   />

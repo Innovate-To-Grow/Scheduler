@@ -8,7 +8,7 @@ import EventHeader from "@/components/EventHeader";
 import ParticipantView from "@/components/ParticipantView";
 import OrganizerView from "@/components/OrganizerView";
 import AppButton from "@/components/AppButton";
-import { fetchEvent } from "@/lib/api/events";
+import { fetchEvent, verifyEvent } from "@/lib/api/events";
 
 function EventPage() {
   const searchParams = useSearchParams();
@@ -26,8 +26,13 @@ function EventPage() {
         const { event: ev } = await fetchEvent(eventCode);
         setEvent(ev);
 
-        if (managePassword !== null) {
-          setIsOrganizer(true);
+        if (managePassword) {
+          try {
+            const { valid } = await verifyEvent(eventCode, managePassword);
+            if (valid) setIsOrganizer(true);
+          } catch {
+            // verification failed — remain as participant
+          }
         }
       } catch (err) {
         setError(err.message || "Event not found");
@@ -79,7 +84,7 @@ function EventPage() {
   const numSlots = (event.endHour - event.startHour) * 7;
 
   return (
-    <EventContext.Provider value={{ event, isOrganizer, numSlots }}>
+    <EventContext.Provider value={{ event, isOrganizer, password: managePassword, numSlots }}>
       <EventHeader eventName={event.name} eventCode={event.code} />
       {isOrganizer ? <OrganizerView /> : <ParticipantView />}
     </EventContext.Provider>

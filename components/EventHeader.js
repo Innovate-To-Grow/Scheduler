@@ -9,9 +9,8 @@ import AppButton from "@/components/AppButton";
 function EventHeader({ eventName, eventCode }) {
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = `${window.location.origin}/event?code=${eventCode}`;
-
   const handleCopy = async () => {
+    const shareUrl = `${window.location.origin}/event?code=${eventCode}`;
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);

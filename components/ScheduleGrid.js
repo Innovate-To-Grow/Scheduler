@@ -124,7 +124,7 @@ function ScheduleGrid({
                 overflow: "hidden",
               }}
             >
-              {dayIndices.map((dayIndex) => (
+              {dayIndices.map((dayIndex, colPos) => (
                 <div key={dayIndex} style={{ display: "flex", flexDirection: "column", flex: 1 }}>
                   {times.map((t, hourIndex) => {
                     const idx = hourIndex * 7 + dayIndex;
@@ -155,7 +155,7 @@ function ScheduleGrid({
                               ? "1px solid var(--md-sys-color-surface-variant)"
                               : "none",
                           borderLeft:
-                            dayIndex !== 0
+                            colPos !== 0
                               ? "1px solid var(--md-sys-color-surface-variant)"
                               : "none",
                           cursor: readOnly ? "default" : "pointer",

@@ -13,6 +13,7 @@ const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MODES = [
   { value: "inperson", label: "In-Person" },
   { value: "virtual", label: "Virtual" },
+  { value: "both", label: "Both" },
 ];
 
 function ToggleChip({ label, active, onClick }) {
@@ -61,6 +62,7 @@ function CreateEvent() {
   const [startHour, setStartHour] = useState(9);
   const [endHour, setEndHour] = useState(17);
   const [selectedDays, setSelectedDays] = useState([1, 2, 3, 4, 5]);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -81,7 +83,8 @@ function CreateEvent() {
     setError("");
     const errors = [];
     if (!name.trim()) errors.push("Event name is required");
-    if (mode !== "virtual" && !location.trim()) errors.push("Location is required for in-person events");
+    if (!password) errors.push("Password is required");
+    if (mode !== "virtual" && !location.trim()) errors.push("Location is required");
     if (startHour >= endHour) errors.push("End time must be after start time");
     if (selectedDays.length === 0) errors.push("Select at least one day");
     if (errors.length > 0) {
@@ -91,15 +94,16 @@ function CreateEvent() {
 
     setLoading(true);
     try {
-      const { event } = await createEvent({
+      const { event, password: pw } = await createEvent({
         name: name.trim(),
+        password,
         startHour,
         endHour,
         days: selectedDays,
         mode,
         location: location.trim(),
       });
-      router.replace(`/event?code=${event.code}&manage=1`);
+      router.replace(`/event?code=${event.code}&manage=${encodeURIComponent(pw)}`);
     } catch (err) {
       setError(err.message || "Failed to create event");
     } finally {
@@ -140,6 +144,16 @@ function CreateEvent() {
           label="Event Name"
           value={name}
           onInput={(e) => setName(e.target.value)}
+          maxLength="200"
+          style={{ width: "100%" }}
+        ></md-outlined-text-field>
+
+        {/* Organizer password */}
+        <md-outlined-text-field
+          label="Organizer Password"
+          type="password"
+          value={password}
+          onInput={(e) => setPassword(e.target.value)}
           maxLength="200"
           style={{ width: "100%" }}
         ></md-outlined-text-field>

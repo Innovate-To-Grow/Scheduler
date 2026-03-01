@@ -35,11 +35,25 @@ export async function PUT(req) {
       return NextResponse.json({ error: "weights must be an array" }, { status: 400 });
     }
 
+    const participantNames = db
+      .prepare("SELECT name FROM participant WHERE event_id = ?")
+      .all(event.id)
+      .map((r) => r.name);
+
     for (const item of weights) {
       const participantName = item.participantName ?? item.name;
       const w = Number(item.weight !== undefined ? item.weight : 1.0);
       if (!participantName || !Number.isFinite(w) || w < 0 || w > 1) {
         return NextResponse.json({ error: "Invalid weight entry" }, { status: 400 });
+      }
+      if (item.included !== undefined && item.included !== 0 && item.included !== 1) {
+        return NextResponse.json({ error: "Invalid included value" }, { status: 400 });
+      }
+      if (!participantNames.includes(participantName)) {
+        return NextResponse.json(
+          { error: `Participant '${participantName}' not found` },
+          { status: 400 }
+        );
       }
     }
 

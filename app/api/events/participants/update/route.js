@@ -13,6 +13,33 @@ export async function PUT(req) {
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const { scheduleInperson, scheduleVirtual, submitted } = await req.json();
+    const expectedLength = (event.end_hour - event.start_hour) * 7;
+
+    function validateSchedule(schedule, label) {
+      let arr = schedule;
+      if (typeof arr === "string") {
+        try {
+          arr = JSON.parse(arr);
+        } catch {
+          return `Invalid ${label}: not valid JSON`;
+        }
+      }
+      if (!Array.isArray(arr)) return `Invalid ${label}: must be an array`;
+      if (arr.length !== expectedLength)
+        return `Invalid ${label}: expected ${expectedLength} slots, got ${arr.length}`;
+      if (!arr.every((v) => typeof v === "number" && v >= 0 && v <= 1))
+        return `Invalid ${label}: values must be numbers between 0 and 1`;
+      return null;
+    }
+
+    if (scheduleInperson !== undefined) {
+      const err = validateSchedule(scheduleInperson, "scheduleInperson");
+      if (err) return NextResponse.json({ error: err }, { status: 400 });
+    }
+    if (scheduleVirtual !== undefined) {
+      const err = validateSchedule(scheduleVirtual, "scheduleVirtual");
+      if (err) return NextResponse.json({ error: err }, { status: 400 });
+    }
 
     const existing = db
       .prepare("SELECT * FROM participant WHERE event_id = ? AND name = ?")

@@ -26,6 +26,10 @@ beforeAll(() => {
   db = jest.requireMock("@/lib/db").db;
 });
 
+afterAll(() => {
+  db.close();
+});
+
 beforeEach(() => {
   db.exec("DELETE FROM participant_weight");
   db.exec("DELETE FROM participant");

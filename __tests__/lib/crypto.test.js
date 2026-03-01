@@ -21,22 +21,27 @@ describe("generateEventCode", () => {
 });
 
 describe("hashPassword", () => {
-  test("returns a 64-character hex string (SHA-256)", () => {
-    const hash = hashPassword("test");
-    expect(hash).toHaveLength(64);
-    expect(hash).toMatch(/^[a-f0-9]+$/);
+  test("returns salt:hash format (32-char hex salt + 64-char hex hash)", () => {
+    const result = hashPassword("test");
+    expect(result).toMatch(/^[a-f0-9]{32}:[a-f0-9]{64}$/);
   });
 
-  test("is deterministic for the same input", () => {
-    expect(hashPassword("password")).toBe(hashPassword("password"));
+  test("same input produces different outputs (random salt)", () => {
+    const h1 = hashPassword("password");
+    const h2 = hashPassword("password");
+    expect(h1).not.toBe(h2);
   });
 
-  test("different inputs produce different hashes", () => {
+  test("different inputs produce different hashes (same salt would differ)", () => {
+    // With random salts both will differ, but verify they aren't identical
     expect(hashPassword("foo")).not.toBe(hashPassword("bar"));
   });
 
   test("is case-sensitive", () => {
-    expect(hashPassword("Secret")).not.toBe(hashPassword("secret"));
+    // Both will have different salts, so they'll always differ,
+    // but verify via verifyPassword that "Secret" != "secret"
+    const hash = hashPassword("Secret");
+    expect(verifyPassword("secret", hash)).toBe(false);
   });
 });
 
@@ -59,5 +64,23 @@ describe("verifyPassword", () => {
   test("returns false for empty string against a real hash", () => {
     const hash = hashPassword("nonempty");
     expect(verifyPassword("", hash)).toBe(false);
+  });
+
+  test("returns false for empty stored hash", () => {
+    expect(verifyPassword("anything", "")).toBe(false);
+  });
+
+  test("returns false for null stored hash", () => {
+    expect(verifyPassword("anything", null)).toBe(false);
+  });
+
+  test("returns false for undefined stored hash", () => {
+    expect(verifyPassword("anything", undefined)).toBe(false);
+  });
+
+  test("returns false for legacy unsalted hash format", () => {
+    // A plain 64-char hex string (no colon) should not verify
+    const legacyHash = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08";
+    expect(verifyPassword("test", legacyHash)).toBe(false);
   });
 });

@@ -2,6 +2,7 @@
   "name": "scheduler",
   "version": "0.1.0",
   "private": true,
+  "engines": { "node": ">=20" },
   "dependencies": {
     "@material/web": "^2.4.1",
     "better-sqlite3": "^12.6.2",
@@ -26,7 +27,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "jest --forceExit",
+    "test": "jest",
     "test:watch": "jest --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

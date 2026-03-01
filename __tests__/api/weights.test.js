@@ -10,7 +10,7 @@ jest.mock("@/lib/db", () => {
 
 import { POST as verifyEvent } from "@/app/api/events/verify/route";
 import { GET as getWeights, PUT as updateWeights } from "@/app/api/events/weights/route";
-import { generateEventCode } from "@/lib/crypto";
+import { generateEventCode, hashPassword } from "@/lib/crypto";
 
 let db;
 let eventCode;
@@ -20,17 +20,22 @@ beforeAll(() => {
   db = jest.requireMock("@/lib/db").db;
 });
 
+afterAll(() => {
+  db.close();
+});
+
 beforeEach(() => {
   db.exec("DELETE FROM participant_weight");
   db.exec("DELETE FROM participant");
   db.exec("DELETE FROM event");
 
   eventCode = generateEventCode();
+  const passwordHash = hashPassword("eventpass");
   const res = db
     .prepare(
       "INSERT INTO event (code, name, password_hash, start_hour, end_hour) VALUES (?, ?, ?, ?, ?)"
     )
-    .run(eventCode, "Weighted Event", "", 9, 17);
+    .run(eventCode, "Weighted Event", passwordHash, 9, 17);
   eventId = res.lastInsertRowid;
 
   // Seed two participants
@@ -46,31 +51,39 @@ beforeEach(() => {
 // ── POST /api/events/verify ────────────────────────────────────────────────────────
 
 describe("POST /api/events/verify", () => {
-  test("always returns { valid: true }", async () => {
-    const res = await verifyEvent(new Request("http://localhost/api/events/verify", { method: "POST" }));
+  function makeReq(body) {
+    return new Request("http://localhost/api/events/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  test("returns valid: true for correct password", async () => {
+    const res = await verifyEvent(makeReq({ code: eventCode, password: "eventpass" }));
     expect(res.status).toBe(200);
     const { valid } = await res.json();
     expect(valid).toBe(true);
   });
 
-  test("returns { valid: true } regardless of password provided", async () => {
-    const res = await verifyEvent(
-      new Request("http://localhost/api/events/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: "wrongpass" }),
-      })
-    );
+  test("returns valid: false for wrong password", async () => {
+    const res = await verifyEvent(makeReq({ code: eventCode, password: "wrongpass" }));
     expect(res.status).toBe(200);
     const { valid } = await res.json();
-    expect(valid).toBe(true);
+    expect(valid).toBe(false);
   });
 
-  test("returns { valid: true } even for unknown event code", async () => {
-    const res = await verifyEvent(new Request("http://localhost/api/events/verify", { method: "POST" }));
-    expect(res.status).toBe(200);
-    const { valid } = await res.json();
-    expect(valid).toBe(true);
+  test("returns 404 for unknown event code", async () => {
+    const res = await verifyEvent(makeReq({ code: "XXXXXXXX", password: "eventpass" }));
+    expect(res.status).toBe(404);
+  });
+
+  test("returns 400 when fields are missing", async () => {
+    const res1 = await verifyEvent(makeReq({ code: eventCode }));
+    expect(res1.status).toBe(400);
+
+    const res2 = await verifyEvent(makeReq({ password: "eventpass" }));
+    expect(res2.status).toBe(400);
   });
 });
 
