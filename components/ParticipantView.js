@@ -476,7 +476,7 @@ function ParticipantView() {
                 startHour={event.startHour}
                 endHour={event.endHour}
                 selectedDays={event.days}
-                readOnly={mode === "both" && activeTab !== "inperson"}
+                readOnly={submitted || (mode === "both" && activeTab !== "inperson")}
                 showValues={false}
                 onCellPaint={handleCellPaint}
                 label={mode === "both" ? "In-Person" : undefined}
@@ -488,18 +488,20 @@ function ParticipantView() {
                 startHour={event.startHour}
                 endHour={event.endHour}
                 selectedDays={event.days}
-                readOnly={mode === "both" && activeTab !== "virtual"}
+                readOnly={submitted || (mode === "both" && activeTab !== "virtual")}
                 showValues={false}
                 onCellPaint={handleCellPaint}
                 label={mode === "both" ? "Virtual" : undefined}
               />
             )}
 
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <AppButton onClick={() => setShowDialog(true)} icon={<MdSend />}>
-                Submit Schedule
-              </AppButton>
-            </div>
+            {!submitted && (
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <AppButton onClick={() => setShowDialog(true)} icon={<MdSend />}>
+                  Submit Schedule
+                </AppButton>
+              </div>
+            )}
           </div>
         </div>
 
