@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 function getEvent(code) {
-  return db.prepare("SELECT * FROM event WHERE code = ?").get(code);
+  return db.prepare("SELECT id, start_hour, end_hour FROM event WHERE code = ?").get(code);
 }
 
 export async function GET(req) {
@@ -14,13 +14,16 @@ export async function GET(req) {
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const participants = db
-      .prepare("SELECT * FROM participant WHERE event_id = ? ORDER BY name ASC")
+      .prepare(
+        "SELECT id, event_id, name, schedule_inperson, schedule_virtual, submitted, created_at FROM participant WHERE event_id = ? ORDER BY name ASC"
+      )
       .all(event.id);
 
     return NextResponse.json({ participants });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
-    return NextResponse.json({ error: err.message }, { status });
+    const message = status === 500 ? "Internal server error" : err.message;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
@@ -42,7 +45,9 @@ export async function POST(req) {
     const defaultSchedule = JSON.stringify(Array(numSlots).fill(0));
 
     const existing = db
-      .prepare("SELECT * FROM participant WHERE event_id = ? AND name = ?")
+      .prepare(
+        "SELECT id, event_id, name, schedule_inperson, schedule_virtual, submitted, created_at FROM participant WHERE event_id = ? AND name = ?"
+      )
       .get(event.id, trimmedName);
 
     if (existing) {
@@ -57,13 +62,17 @@ export async function POST(req) {
         .run(event.id, trimmedName, defaultSchedule, defaultSchedule);
 
       const participant = db
-        .prepare("SELECT * FROM participant WHERE id = ?")
+        .prepare(
+          "SELECT id, event_id, name, schedule_inperson, schedule_virtual, submitted, created_at FROM participant WHERE id = ?"
+        )
         .get(info.lastInsertRowid);
       return NextResponse.json({ participant }, { status: 201 });
     } catch (insertErr) {
       if (insertErr.code === "SQLITE_CONSTRAINT_UNIQUE") {
         const found = db
-          .prepare("SELECT * FROM participant WHERE event_id = ? AND name = ?")
+          .prepare(
+            "SELECT id, event_id, name, schedule_inperson, schedule_virtual, submitted, created_at FROM participant WHERE event_id = ? AND name = ?"
+          )
           .get(event.id, trimmedName);
         return NextResponse.json({ participant: found });
       }
@@ -71,6 +80,7 @@ export async function POST(req) {
     }
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
-    return NextResponse.json({ error: err.message }, { status });
+    const message = status === 500 ? "Internal server error" : err.message;
+    return NextResponse.json({ error: message }, { status });
   }
 }

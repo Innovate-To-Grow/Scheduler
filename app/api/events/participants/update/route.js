@@ -9,7 +9,9 @@ export async function PUT(req) {
     if (!code || !name)
       return NextResponse.json({ error: "code and name are required" }, { status: 400 });
 
-    const event = db.prepare("SELECT * FROM event WHERE code = ?").get(code);
+    const event = db
+      .prepare("SELECT id, start_hour, end_hour FROM event WHERE code = ?")
+      .get(code);
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const { scheduleInperson, scheduleVirtual, submitted } = await req.json();
@@ -42,7 +44,9 @@ export async function PUT(req) {
     }
 
     const existing = db
-      .prepare("SELECT * FROM participant WHERE event_id = ? AND name = ?")
+      .prepare(
+        "SELECT id, event_id, name, schedule_inperson, schedule_virtual, submitted, created_at FROM participant WHERE event_id = ? AND name = ?"
+      )
       .get(event.id, name);
 
     if (!existing) {
@@ -79,13 +83,16 @@ export async function PUT(req) {
     );
 
     const updated = db
-      .prepare("SELECT * FROM participant WHERE event_id = ? AND name = ?")
+      .prepare(
+        "SELECT id, event_id, name, schedule_inperson, schedule_virtual, submitted, created_at FROM participant WHERE event_id = ? AND name = ?"
+      )
       .get(event.id, name);
 
     return NextResponse.json({ participant: updated });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
-    return NextResponse.json({ error: err.message }, { status });
+    const message = status === 500 ? "Internal server error" : err.message;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
@@ -97,11 +104,11 @@ export async function DELETE(req) {
     if (!code || !name)
       return NextResponse.json({ error: "code and name are required" }, { status: 400 });
 
-    const event = db.prepare("SELECT * FROM event WHERE code = ?").get(code);
+    const event = db.prepare("SELECT id FROM event WHERE code = ?").get(code);
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const existing = db
-      .prepare("SELECT * FROM participant WHERE event_id = ? AND name = ?")
+      .prepare("SELECT id FROM participant WHERE event_id = ? AND name = ?")
       .get(event.id, name);
 
     if (!existing) {
@@ -121,6 +128,7 @@ export async function DELETE(req) {
     return NextResponse.json({ success: true, removed: { name } });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
-    return NextResponse.json({ error: err.message }, { status });
+    const message = status === 500 ? "Internal server error" : err.message;
+    return NextResponse.json({ error: message }, { status });
   }
 }

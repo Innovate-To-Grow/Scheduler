@@ -6,7 +6,7 @@ export async function GET(req) {
     const code = new URL(req.url).searchParams.get("code");
     if (!code) return NextResponse.json({ error: "code is required" }, { status: 400 });
 
-    const event = db.prepare("SELECT * FROM event WHERE code = ?").get(code);
+    const event = db.prepare("SELECT id FROM event WHERE code = ?").get(code);
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const weights = db
@@ -18,7 +18,8 @@ export async function GET(req) {
     return NextResponse.json({ weights });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
-    return NextResponse.json({ error: err.message }, { status });
+    const message = status === 500 ? "Internal server error" : err.message;
+    return NextResponse.json({ error: message }, { status });
   }
 }
 
@@ -27,7 +28,7 @@ export async function PUT(req) {
     const code = new URL(req.url).searchParams.get("code");
     if (!code) return NextResponse.json({ error: "code is required" }, { status: 400 });
 
-    const event = db.prepare("SELECT * FROM event WHERE code = ?").get(code);
+    const event = db.prepare("SELECT id FROM event WHERE code = ?").get(code);
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const { weights } = await req.json();
@@ -87,6 +88,7 @@ export async function PUT(req) {
     return NextResponse.json({ weights: updated });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
-    return NextResponse.json({ error: err.message }, { status });
+    const message = status === 500 ? "Internal server error" : err.message;
+    return NextResponse.json({ error: message }, { status });
   }
 }

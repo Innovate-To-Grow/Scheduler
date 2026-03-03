@@ -22,13 +22,13 @@ export async function GET(req) {
         startHour: event.start_hour,
         endHour: event.end_hour,
         days: JSON.parse(event.days || "[1,2,3,4,5]"),
-        mode: event.mode || "both",
+        mode: event.mode || "inperson",
         location: event.location || "",
         createdAt: event.created_at,
       },
     });
   } catch (err) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -51,9 +51,9 @@ export async function POST(req) {
       return NextResponse.json({ error: "Password too long (max 200)" }, { status: 400 });
     }
 
-    if (mode && !["virtual", "inperson", "both"].includes(mode)) {
+    if (mode && !["virtual", "inperson"].includes(mode)) {
       return NextResponse.json(
-        { error: "Invalid mode. Must be 'inperson', 'virtual', or 'both'" },
+        { error: "Invalid mode. Must be 'inperson' or 'virtual'" },
         { status: 400 }
       );
     }
@@ -117,6 +117,7 @@ export async function POST(req) {
     );
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
-    return NextResponse.json({ error: err.message }, { status });
+    const message = status === 500 ? "Internal server error" : err.message;
+    return NextResponse.json({ error: message }, { status });
   }
 }
