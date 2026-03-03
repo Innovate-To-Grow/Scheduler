@@ -17,8 +17,7 @@ import "@material/web/checkbox/checkbox.js";
 import "@material/web/slider/slider.js";
 import "@material/web/dialog/dialog.js";
 import "@material/web/textfield/outlined-text-field.js";
-import { DAY_LABELS } from "@/lib/constants";
-import { formatHour, formatMode } from "@/lib/format";
+import EventDetailsGrid from "@/components/EventDetailsGrid";
 
 function OrganizerView() {
   const { event, numSlots } = useContext(EventContext);
@@ -227,12 +226,6 @@ function OrganizerView() {
 
   const weightedInperson = calculateWeightedAverage("inpersonArray");
   const weightedVirtual = calculateWeightedAverage("virtualArray");
-  const dayText = Array.isArray(event?.days)
-    ? event.days
-        .map((d) => DAY_LABELS[d])
-        .filter(Boolean)
-        .join(", ")
-    : "";
   const submittedCount = participants.filter((p) => p.submitted).length;
 
   return (
@@ -276,114 +269,13 @@ function OrganizerView() {
         style={{ marginBottom: "24px", display: "flex", flexDirection: "column", gap: "12px" }}
       >
         <h3 style={{ margin: 0, color: "var(--md-sys-color-on-surface)" }}>Event Details</h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: "12px",
-          }}
-        >
-          <div
-            style={{
-              padding: "12px",
-              border: "1px solid var(--md-sys-color-surface-variant)",
-              borderRadius: "12px",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-              Event
-            </p>
-            <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{event?.name}</p>
-          </div>
-          <div
-            style={{
-              padding: "12px",
-              border: "1px solid var(--md-sys-color-surface-variant)",
-              borderRadius: "12px",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-              Type
-            </p>
-            <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{formatMode(mode)}</p>
-          </div>
-          <div
-            style={{
-              padding: "12px",
-              border: "1px solid var(--md-sys-color-surface-variant)",
-              borderRadius: "12px",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-              Time
-            </p>
-            <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>
-              {formatHour(event?.startHour)} - {formatHour(event?.endHour)}
-            </p>
-          </div>
-          <div
-            style={{
-              padding: "12px",
-              border: "1px solid var(--md-sys-color-surface-variant)",
-              borderRadius: "12px",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-              Days
-            </p>
-            <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{dayText || "Not set"}</p>
-          </div>
-          <div
-            style={{
-              padding: "12px",
-              border: "1px solid var(--md-sys-color-surface-variant)",
-              borderRadius: "12px",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-              Location
-            </p>
-            <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{event?.location || "N/A"}</p>
-          </div>
-          <div
-            style={{
-              padding: "12px",
-              border: "1px solid var(--md-sys-color-surface-variant)",
-              borderRadius: "12px",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-              Event Code
-            </p>
-            <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{event?.code}</p>
-          </div>
-          <div
-            style={{
-              padding: "12px",
-              border: "1px solid var(--md-sys-color-surface-variant)",
-              borderRadius: "12px",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-              Participants
-            </p>
-            <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{participants.length}</p>
-          </div>
-          <div
-            style={{
-              padding: "12px",
-              border: "1px solid var(--md-sys-color-surface-variant)",
-              borderRadius: "12px",
-            }}
-          >
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-              Submitted
-            </p>
-            <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>
-              {submittedCount} / {participants.length}
-            </p>
-          </div>
-        </div>
+        <EventDetailsGrid
+          event={event}
+          extraCards={[
+            { label: "Participants", value: participants.length },
+            { label: "Submitted", value: `${submittedCount} / ${participants.length}` },
+          ]}
+        />
       </div>
 
       <div className="two-pane">

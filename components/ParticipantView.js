@@ -9,8 +9,7 @@ import { fetchParticipants, joinEvent, updateParticipant } from "@/lib/api/parti
 import "@material/web/slider/slider.js";
 import "@material/web/dialog/dialog.js";
 import "@material/web/textfield/outlined-text-field.js";
-import { DAY_LABELS } from "@/lib/constants";
-import { formatHour, formatMode } from "@/lib/format";
+import EventDetailsGrid from "@/components/EventDetailsGrid";
 
 function ParticipantView() {
   const { event, numSlots } = useContext(EventContext);
@@ -146,13 +145,6 @@ function ParticipantView() {
 
   // Name entry screen
   if (!joined) {
-    const dayText = Array.isArray(event?.days)
-      ? event.days
-          .map((d) => DAY_LABELS[d])
-          .filter(Boolean)
-          .join(", ")
-      : "";
-
     return (
       <div
         className="page-pad"
@@ -180,94 +172,7 @@ function ParticipantView() {
             </p>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-              gap: "12px",
-            }}
-          >
-            <div
-              style={{
-                padding: "12px",
-                border: "1px solid var(--md-sys-color-surface-variant)",
-                borderRadius: "12px",
-                background: "var(--md-sys-color-surface)",
-              }}
-            >
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-                Event
-              </p>
-              <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{event?.name}</p>
-            </div>
-            <div
-              style={{
-                padding: "12px",
-                border: "1px solid var(--md-sys-color-surface-variant)",
-                borderRadius: "12px",
-                background: "var(--md-sys-color-surface)",
-              }}
-            >
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-                Type
-              </p>
-              <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{formatMode(mode)}</p>
-            </div>
-            <div
-              style={{
-                padding: "12px",
-                border: "1px solid var(--md-sys-color-surface-variant)",
-                borderRadius: "12px",
-                background: "var(--md-sys-color-surface)",
-              }}
-            >
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-                Time
-              </p>
-              <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>
-                {formatHour(event?.startHour)} - {formatHour(event?.endHour)}
-              </p>
-            </div>
-            <div
-              style={{
-                padding: "12px",
-                border: "1px solid var(--md-sys-color-surface-variant)",
-                borderRadius: "12px",
-                background: "var(--md-sys-color-surface)",
-              }}
-            >
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-                Days
-              </p>
-              <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{dayText || "Not set"}</p>
-            </div>
-            <div
-              style={{
-                padding: "12px",
-                border: "1px solid var(--md-sys-color-surface-variant)",
-                borderRadius: "12px",
-                background: "var(--md-sys-color-surface)",
-              }}
-            >
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-                Location
-              </p>
-              <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{event?.location || "N/A"}</p>
-            </div>
-            <div
-              style={{
-                padding: "12px",
-                border: "1px solid var(--md-sys-color-surface-variant)",
-                borderRadius: "12px",
-                background: "var(--md-sys-color-surface)",
-              }}
-            >
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-                Event Code
-              </p>
-              <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{event?.code}</p>
-            </div>
-          </div>
+          <EventDetailsGrid event={event} />
 
           <div
             style={{
