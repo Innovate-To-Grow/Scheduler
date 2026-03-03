@@ -21,6 +21,11 @@ function EventPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!eventCode) {
+      setError("No event code in URL");
+      setLoading(false);
+      return;
+    }
     async function load() {
       try {
         const { event: ev } = await fetchEvent(eventCode);

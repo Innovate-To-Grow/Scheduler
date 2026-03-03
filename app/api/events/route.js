@@ -81,6 +81,9 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+    if (eventLocation.length > 500) {
+      return NextResponse.json({ error: "Location too long (max 500)" }, { status: 400 });
+    }
 
     const daysJson = JSON.stringify(selectedDays);
     const passwordHash = hashPassword(password);
