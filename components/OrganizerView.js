@@ -569,11 +569,13 @@ function OrganizerView() {
       )}
 
       <md-dialog ref={confirmDialogRef} onClosed={() => setConfirmRemoveName("")}>
-        <div slot="headline">Confirm Removal</div>
-        <div slot="content" style={{ color: "var(--md-sys-color-on-surface-variant)" }}>
-          Remove <strong>{confirmRemoveName}</strong> from this event?
-        </div>
-        <div slot="actions" style={{ display: "flex", gap: "8px" }}>
+        <span slot="headline">Confirm Removal</span>
+        <form slot="content" method="dialog" style={{ padding: "0 24px" }}>
+          <p style={{ margin: 0, lineHeight: 1.5 }}>
+            Remove <strong>{confirmRemoveName}</strong> from this event?
+          </p>
+        </form>
+        <div slot="actions">
           <AppButton onClick={() => setConfirmRemoveName("")} variant="outlined" icon={<MdClose />}>
             Cancel
           </AppButton>

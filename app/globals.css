@@ -206,9 +206,17 @@ button {
   scrollbar-width: none;
 }
 
-/* Material Web Dialog Fixes */
+/* Material Web Dialog Theming */
 md-dialog {
-  z-index: 1000;
+  --md-dialog-container-color: var(--md-sys-color-surface-container-lowest);
+  --md-dialog-headline-color: var(--md-sys-color-on-surface);
+  --md-dialog-headline-font: var(--md-sys-typescale-headline-small-font);
+  --md-dialog-headline-size: 1.25rem;
+  --md-dialog-headline-weight: 600;
+  --md-dialog-supporting-text-color: var(--md-sys-color-on-surface-variant);
+  --md-dialog-supporting-text-font: var(--md-sys-typescale-body-medium-font);
+  --md-dialog-supporting-text-size: 0.95rem;
+  --md-dialog-container-shape: 16px;
 }
 
 /* ── Responsive helpers ─────────────────────────────────── */
@@ -299,7 +307,7 @@ md-dialog {
 
   /* Dialog */
   md-dialog {
-    --md-dialog-container-max-width: 95vw;
+    --md-dialog-container-max-inline-size: 95vw;
   }
 
   /* Make md-select full-width inside stacked time row */

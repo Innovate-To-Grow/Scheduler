@@ -465,11 +465,11 @@ function ParticipantView() {
       </div>
 
       <md-dialog ref={dialogRef} onClosed={() => setShowDialog(false)}>
-        <div slot="headline">Confirm Submission</div>
-        <div slot="content" style={{ color: "var(--md-sys-color-on-surface-variant)" }}>
-          Save your availability?
-        </div>
-        <div slot="actions" style={{ display: "flex", gap: "8px" }}>
+        <span slot="headline">Confirm Submission</span>
+        <form slot="content" method="dialog" style={{ padding: "0 24px" }}>
+          <p style={{ margin: 0, lineHeight: 1.5 }}>Save your availability?</p>
+        </form>
+        <div slot="actions">
           <AppButton onClick={() => setShowDialog(false)} variant="outlined" icon={<MdClose />}>
             Cancel
           </AppButton>
