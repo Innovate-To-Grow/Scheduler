@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useContext, useEffect, useRef } from "react";
-import { MdCheck, MdClose, MdGroups, MdLogin, MdRefresh, MdSend, MdVideocam } from "react-icons/md";
+import { MdCheck, MdClose, MdLogin, MdRefresh, MdSend } from "react-icons/md";
 import AppButton from "@/components/AppButton";
 import EventContext from "@/components/EventContext";
 import ScheduleGrid from "@/components/ScheduleGrid";
@@ -20,20 +20,18 @@ function formatHour(hour) {
 }
 
 function formatMode(mode) {
-  if (mode === "both") return "In-Person + Virtual";
   if (mode === "virtual") return "Virtual";
   return "In-Person";
 }
 
 function ParticipantView() {
   const { event, numSlots } = useContext(EventContext);
-  const mode = event?.mode || "both";
+  const mode = event?.mode || "inperson";
   const [name, setName] = useState("");
   const [joined, setJoined] = useState(false);
   const [scheduleInperson, setScheduleInperson] = useState([]);
   const [scheduleVirtual, setScheduleVirtual] = useState([]);
   const [sliderValue, setSliderValue] = useState(1);
-  const [activeTab, setActiveTab] = useState(mode === "virtual" ? "virtual" : "inperson");
   const [showDialog, setShowDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -44,6 +42,7 @@ function ParticipantView() {
   const [joinError, setJoinError] = useState("");
 
   const dialogRef = useRef(null);
+  const paintModeRef = useRef(null);
 
   useEffect(() => {
     if (showDialog && dialogRef.current) dialogRef.current.show();
@@ -118,20 +117,16 @@ function ParticipantView() {
     }
   };
 
-  const handleCellPaint = (idx) => {
-    if (activeTab === "inperson") {
-      setScheduleInperson((prev) => {
-        const next = [...prev];
-        next[idx] = sliderValue;
-        return next;
-      });
-    } else {
-      setScheduleVirtual((prev) => {
-        const next = [...prev];
-        next[idx] = sliderValue;
-        return next;
-      });
-    }
+  const handleCellPaint = (idx, e) => {
+    const setter = mode === "inperson" ? setScheduleInperson : setScheduleVirtual;
+    setter((prev) => {
+      if (e.type === "mousedown") {
+        paintModeRef.current = prev[idx] > 0 ? "erase" : "paint";
+      }
+      const next = [...prev];
+      next[idx] = paintModeRef.current === "erase" ? 0 : sliderValue;
+      return next;
+    });
   };
 
   const confirmSubmit = async () => {
@@ -450,36 +445,15 @@ function ParticipantView() {
               </p>
             </div>
 
-            {/* Tab switcher — only shown when mode is "both" */}
-            {mode === "both" && (
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <AppButton
-                  onClick={() => setActiveTab("inperson")}
-                  variant={activeTab === "inperson" ? "filled" : "outlined"}
-                  icon={<MdGroups />}
-                >
-                  In-Person
-                </AppButton>
-                <AppButton
-                  onClick={() => setActiveTab("virtual")}
-                  variant={activeTab === "virtual" ? "filled" : "outlined"}
-                  icon={<MdVideocam />}
-                >
-                  Virtual
-                </AppButton>
-              </div>
-            )}
-
             {mode !== "virtual" && (
               <ScheduleGrid
                 schedule={scheduleInperson}
                 startHour={event.startHour}
                 endHour={event.endHour}
                 selectedDays={event.days}
-                readOnly={submitted || (mode === "both" && activeTab !== "inperson")}
+                readOnly={submitted}
                 showValues={false}
                 onCellPaint={handleCellPaint}
-                label={mode === "both" ? "In-Person" : undefined}
               />
             )}
             {mode !== "inperson" && (
@@ -488,20 +462,17 @@ function ParticipantView() {
                 startHour={event.startHour}
                 endHour={event.endHour}
                 selectedDays={event.days}
-                readOnly={submitted || (mode === "both" && activeTab !== "virtual")}
+                readOnly={submitted}
                 showValues={false}
                 onCellPaint={handleCellPaint}
-                label={mode === "both" ? "Virtual" : undefined}
               />
             )}
 
-            {!submitted && (
-              <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <AppButton onClick={() => setShowDialog(true)} icon={<MdSend />}>
-                  Submit Schedule
-                </AppButton>
-              </div>
-            )}
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <AppButton onClick={() => setShowDialog(true)} icon={<MdSend />}>
+                {submitted ? "Update Schedule" : "Submit Schedule"}
+              </AppButton>
+            </div>
           </div>
         </div>
 
@@ -521,7 +492,7 @@ function ParticipantView() {
                     selectedDays={event.days}
                     readOnly={true}
                     showValues={true}
-                    label={mode === "both" ? "In-Person" : "Availability"}
+                    label="Availability"
                   />
                 </div>
               )}
@@ -534,7 +505,7 @@ function ParticipantView() {
                     selectedDays={event.days}
                     readOnly={true}
                     showValues={true}
-                    label={mode === "both" ? "Virtual" : "Availability"}
+                    label="Availability"
                   />
                 </div>
               )}
@@ -560,7 +531,7 @@ function ParticipantView() {
                             selectedDays={event.days}
                             readOnly={true}
                             showValues={true}
-                            label={mode === "both" ? "In-Person" : "Availability"}
+                            label="Availability"
                           />
                         </div>
                       )}
@@ -573,7 +544,7 @@ function ParticipantView() {
                             selectedDays={event.days}
                             readOnly={true}
                             showValues={true}
-                            label={mode === "both" ? "Virtual" : "Availability"}
+                            label="Availability"
                           />
                         </div>
                       )}
