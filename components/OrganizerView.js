@@ -574,11 +574,7 @@ function OrganizerView() {
           Remove <strong>{confirmRemoveName}</strong> from this event?
         </div>
         <div slot="actions" style={{ display: "flex", gap: "8px" }}>
-          <AppButton
-            onClick={() => setConfirmRemoveName("")}
-            variant="outlined"
-            icon={<MdClose />}
-          >
+          <AppButton onClick={() => setConfirmRemoveName("")} variant="outlined" icon={<MdClose />}>
             Cancel
           </AppButton>
           <AppButton onClick={confirmRemoveParticipant} icon={<MdCheck />}>

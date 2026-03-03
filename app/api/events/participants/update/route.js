@@ -10,9 +10,7 @@ export async function PUT(req) {
     if (!code || !name)
       return NextResponse.json({ error: "code and name are required" }, { status: 400 });
 
-    const event = db
-      .prepare("SELECT id, start_hour, end_hour FROM event WHERE code = ?")
-      .get(code);
+    const event = db.prepare("SELECT id, start_hour, end_hour FROM event WHERE code = ?").get(code);
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const { scheduleInperson, scheduleVirtual, submitted } = await req.json();

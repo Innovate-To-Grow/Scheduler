@@ -27,7 +27,7 @@ export async function GET(req) {
         createdAt: event.created_at,
       },
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

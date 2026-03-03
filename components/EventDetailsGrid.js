@@ -13,9 +13,7 @@ function InfoCard({ label, value }) {
         background: "var(--md-sys-color-surface)",
       }}
     >
-      <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>
-        {label}
-      </p>
+      <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--md-sys-color-outline)" }}>{label}</p>
       <p style={{ margin: "4px 0 0 0", fontWeight: 600 }}>{value}</p>
     </div>
   );

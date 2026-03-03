@@ -371,9 +371,7 @@ function ParticipantView() {
             )}
 
             {submitError && (
-              <p
-                style={{ color: "var(--md-sys-color-error)", margin: 0, fontSize: "0.9rem" }}
-              >
+              <p style={{ color: "var(--md-sys-color-error)", margin: 0, fontSize: "0.9rem" }}>
                 {submitError}
               </p>
             )}
