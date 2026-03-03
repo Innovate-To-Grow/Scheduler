@@ -55,36 +55,29 @@ function OrganizerView() {
     else if (!confirmRemoveName && confirmDialogRef.current) confirmDialogRef.current.close();
   }, [confirmRemoveName]);
 
-  // Load participants
+  // Load participants and weights in parallel
   useEffect(() => {
     async function load() {
       try {
-        const { participants: list } = await fetchParticipants(event.code);
-        const parsed = list.map((p) => ({
+        const [participantsRes, weightsRes] = await Promise.all([
+          fetchParticipants(event.code),
+          fetchWeights(event.code),
+        ]);
+
+        const parsed = participantsRes.participants.map((p) => ({
           ...p,
           inpersonArray: JSON.parse(p.schedule_inperson).map(Number),
           virtualArray: JSON.parse(p.schedule_virtual).map(Number),
         }));
         setParticipants(parsed);
-      } catch (err) {
-        console.error("Failed to load participants", err);
-      }
-    }
-    load();
-  }, [event.code, refreshKey]);
 
-  // Load weights
-  useEffect(() => {
-    async function load() {
-      try {
-        const { weights: list } = await fetchWeights(event.code);
         const map = {};
-        list.forEach((w) => {
+        weightsRes.weights.forEach((w) => {
           map[w.participant_name] = { weight: w.weight, included: w.included };
         });
         setWeights(map);
       } catch (err) {
-        console.error("Failed to load weights", err);
+        console.error("Failed to load data", err);
       }
     }
     load();
