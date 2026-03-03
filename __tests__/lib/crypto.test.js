@@ -21,9 +21,9 @@ describe("generateEventCode", () => {
 });
 
 describe("hashPassword", () => {
-  test("returns salt:hash format (32-char hex salt + 64-char hex hash)", () => {
+  test("returns salt:hash format (32-char hex salt + 128-char hex hash)", () => {
     const result = hashPassword("test");
-    expect(result).toMatch(/^[a-f0-9]{32}:[a-f0-9]{64}$/);
+    expect(result).toMatch(/^[a-f0-9]{32}:[a-f0-9]{128}$/);
   });
 
   test("same input produces different outputs (random salt)", () => {

@@ -73,7 +73,7 @@ describe("POST /api/events", () => {
     expect(row.name).toBe("Persisted");
     expect(row.start_hour).toBe(8);
     expect(row.end_hour).toBe(20);
-    expect(row.password_hash).toMatch(/^[a-f0-9]{32}:[a-f0-9]{64}$/);
+    expect(row.password_hash).toMatch(/^[a-f0-9]{32}:[a-f0-9]{128}$/);
   });
 
   test("returns password in response for redirect", async () => {
@@ -122,7 +122,7 @@ describe("POST /api/events", () => {
     expect(res.status).toBe(400);
   });
 
-  test("accepts mode 'both'", async () => {
+  test("rejects mode 'both'", async () => {
     const res = await createEvent(
       makeReq({
         name: "Hybrid",
@@ -133,9 +133,7 @@ describe("POST /api/events", () => {
         location: "HQ",
       })
     );
-    expect(res.status).toBe(201);
-    const { event } = await res.json();
-    expect(event.mode).toBe("both");
+    expect(res.status).toBe(400);
   });
 
   test("returns 400 when startHour >= endHour", async () => {
@@ -169,7 +167,7 @@ describe("GET /api/events?code=", () => {
     code = generateEventCode();
     db.prepare(
       "INSERT INTO event (code, name, password_hash, start_hour, end_hour, days, mode, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-    ).run(code, "Existing Event", hashPassword("pw"), 10, 18, "[1,2,3]", "both", "Office");
+    ).run(code, "Existing Event", hashPassword("pw"), 10, 18, "[1,2,3]", "inperson", "Office");
   });
 
   test("returns 200 with event metadata including days and mode", async () => {
@@ -181,7 +179,7 @@ describe("GET /api/events?code=", () => {
     expect(event.startHour).toBe(10);
     expect(event.endHour).toBe(18);
     expect(event.days).toEqual([1, 2, 3]);
-    expect(event.mode).toBe("both");
+    expect(event.mode).toBe("inperson");
     expect(event.createdAt).toBeTruthy();
   });
 
