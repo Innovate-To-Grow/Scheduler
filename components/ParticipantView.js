@@ -353,7 +353,7 @@ function ParticipantView() {
                 startHour={event.startHour}
                 endHour={event.endHour}
                 selectedDays={event.days}
-                readOnly={submitted}
+                readOnly={false}
                 showValues={false}
                 onCellPaint={handleCellPaint}
               />
@@ -364,7 +364,7 @@ function ParticipantView() {
                 startHour={event.startHour}
                 endHour={event.endHour}
                 selectedDays={event.days}
-                readOnly={submitted}
+                readOnly={false}
                 showValues={false}
                 onCellPaint={handleCellPaint}
               />
