@@ -119,10 +119,11 @@ function ParticipantView() {
 
   const handleCellPaint = (idx, e) => {
     const setter = mode === "inperson" ? setScheduleInperson : setScheduleVirtual;
+    const currentSchedule = mode === "inperson" ? scheduleInperson : scheduleVirtual;
+    if (e.type === "mousedown") {
+      paintModeRef.current = currentSchedule[idx] > 0 ? "erase" : "paint";
+    }
     setter((prev) => {
-      if (e.type === "mousedown") {
-        paintModeRef.current = prev[idx] > 0 ? "erase" : "paint";
-      }
       const next = [...prev];
       next[idx] = paintModeRef.current === "erase" ? 0 : sliderValue;
       return next;
