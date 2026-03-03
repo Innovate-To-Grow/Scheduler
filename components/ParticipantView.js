@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useContext, useEffect, useRef } from "react";
-import { MdCheck, MdClose, MdLogin, MdRefresh, MdSend } from "react-icons/md";
+import { MdLogin, MdRefresh, MdSend } from "react-icons/md";
 import AppButton from "@/components/AppButton";
 import EventContext from "@/components/EventContext";
 import ScheduleGrid from "@/components/ScheduleGrid";
 import { fetchParticipants, joinEvent, updateParticipant } from "@/lib/api/participants";
 import "@material/web/slider/slider.js";
-import "@material/web/dialog/dialog.js";
 import "@material/web/textfield/outlined-text-field.js";
 import EventDetailsGrid from "@/components/EventDetailsGrid";
 
@@ -19,7 +18,6 @@ function ParticipantView() {
   const [scheduleInperson, setScheduleInperson] = useState([]);
   const [scheduleVirtual, setScheduleVirtual] = useState([]);
   const [sliderValue, setSliderValue] = useState(1);
-  const [showDialog, setShowDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [existingNames, setExistingNames] = useState([]);
@@ -29,13 +27,7 @@ function ParticipantView() {
   const [joinError, setJoinError] = useState("");
   const [submitError, setSubmitError] = useState("");
 
-  const dialogRef = useRef(null);
   const paintModeRef = useRef(null);
-
-  useEffect(() => {
-    if (showDialog && dialogRef.current) dialogRef.current.show();
-    else if (!showDialog && dialogRef.current) dialogRef.current.close();
-  }, [showDialog]);
 
   useEffect(() => {
     if (!joined && event?.code) {
@@ -123,7 +115,7 @@ function ParticipantView() {
     });
   };
 
-  const confirmSubmit = async () => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
     setSubmitError("");
     try {
@@ -133,11 +125,9 @@ function ParticipantView() {
         submitted: 1,
       });
       setSubmitted(true);
-      setShowDialog(false);
       setRefreshKey((k) => k + 1);
     } catch (err) {
       setSubmitError("Failed to submit: " + err.message);
-      setShowDialog(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -376,8 +366,8 @@ function ParticipantView() {
               </p>
             )}
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <AppButton onClick={() => setShowDialog(true)} icon={<MdSend />}>
-                {submitted ? "Update Schedule" : "Submit Schedule"}
+              <AppButton onClick={handleSubmit} disabled={isSubmitting} icon={<MdSend />}>
+                {isSubmitting ? "Saving..." : submitted ? "Update Schedule" : "Submit Schedule"}
               </AppButton>
             </div>
           </div>
@@ -463,21 +453,6 @@ function ParticipantView() {
           )}
         </div>
       </div>
-
-      <md-dialog ref={dialogRef} onClosed={() => setShowDialog(false)}>
-        <span slot="headline">Confirm Submission</span>
-        <form slot="content" method="dialog" style={{ padding: "0 24px" }}>
-          <p style={{ margin: 0, lineHeight: 1.5 }}>Save your availability?</p>
-        </form>
-        <div slot="actions">
-          <AppButton onClick={() => setShowDialog(false)} variant="outlined" icon={<MdClose />}>
-            Cancel
-          </AppButton>
-          <AppButton onClick={confirmSubmit} disabled={isSubmitting} icon={<MdCheck />}>
-            {isSubmitting ? "Submitting..." : "Confirm"}
-          </AppButton>
-        </div>
-      </md-dialog>
     </div>
   );
 }
