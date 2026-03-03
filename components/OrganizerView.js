@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { GoVerified, GoUnverified } from "react-icons/go";
-import { MdDeleteOutline, MdLogin, MdRefresh, MdSave } from "react-icons/md";
+import { MdCheck, MdClose, MdDeleteOutline, MdLogin, MdRefresh, MdSave } from "react-icons/md";
 import EventContext from "@/components/EventContext";
 import AppButton from "@/components/AppButton";
 import ScheduleGrid from "@/components/ScheduleGrid";
@@ -15,6 +15,7 @@ import {
 import { fetchWeights, updateWeights } from "@/lib/api/weights";
 import "@material/web/checkbox/checkbox.js";
 import "@material/web/slider/slider.js";
+import "@material/web/dialog/dialog.js";
 import "@material/web/textfield/outlined-text-field.js";
 import { DAY_LABELS } from "@/lib/constants";
 import { formatHour, formatMode } from "@/lib/format";
@@ -46,6 +47,14 @@ function OrganizerView() {
   const [myVirtual, setMyVirtual] = useState([]);
   const [mySaving, setMySaving] = useState(false);
   const [removingName, setRemovingName] = useState("");
+  const [confirmRemoveName, setConfirmRemoveName] = useState("");
+  const [removeError, setRemoveError] = useState("");
+  const confirmDialogRef = useRef(null);
+
+  useEffect(() => {
+    if (confirmRemoveName && confirmDialogRef.current) confirmDialogRef.current.show();
+    else if (!confirmRemoveName && confirmDialogRef.current) confirmDialogRef.current.close();
+  }, [confirmRemoveName]);
 
   // Load participants
   useEffect(() => {
@@ -160,11 +169,15 @@ function OrganizerView() {
     }
   };
 
-  const handleRemoveParticipant = async (participantName) => {
+  const handleRemoveParticipant = (participantName) => {
     if (!participantName) return;
-    const confirmed = window.confirm(`Remove ${participantName} from this event?`);
-    if (!confirmed) return;
+    setRemoveError("");
+    setConfirmRemoveName(participantName);
+  };
 
+  const confirmRemoveParticipant = async () => {
+    const participantName = confirmRemoveName;
+    setConfirmRemoveName("");
     setRemovingName(participantName);
     try {
       await deleteParticipant(event.code, participantName);
@@ -182,7 +195,7 @@ function OrganizerView() {
         setMyVirtual([]);
       }
     } catch (err) {
-      alert(`Failed to remove participant: ${err.message}`);
+      setRemoveError(`Failed to remove participant: ${err.message}`);
     } finally {
       setRemovingName("");
     }
@@ -657,6 +670,37 @@ function OrganizerView() {
           )}
         </div>
       </div>
+
+      {removeError && (
+        <p
+          style={{
+            color: "var(--md-sys-color-error)",
+            margin: "16px 0 0 0",
+            fontSize: "0.9rem",
+          }}
+        >
+          {removeError}
+        </p>
+      )}
+
+      <md-dialog ref={confirmDialogRef} onClosed={() => setConfirmRemoveName("")}>
+        <div slot="headline">Confirm Removal</div>
+        <div slot="content" style={{ color: "var(--md-sys-color-on-surface-variant)" }}>
+          Remove <strong>{confirmRemoveName}</strong> from this event?
+        </div>
+        <div slot="actions" style={{ display: "flex", gap: "8px" }}>
+          <AppButton
+            onClick={() => setConfirmRemoveName("")}
+            variant="outlined"
+            icon={<MdClose />}
+          >
+            Cancel
+          </AppButton>
+          <AppButton onClick={confirmRemoveParticipant} icon={<MdCheck />}>
+            Remove
+          </AppButton>
+        </div>
+      </md-dialog>
     </div>
   );
 }

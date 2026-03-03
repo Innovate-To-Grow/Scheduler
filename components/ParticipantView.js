@@ -28,6 +28,7 @@ function ParticipantView() {
   const [participants, setParticipants] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [joinError, setJoinError] = useState("");
+  const [submitError, setSubmitError] = useState("");
 
   const dialogRef = useRef(null);
   const paintModeRef = useRef(null);
@@ -106,7 +107,7 @@ function ParticipantView() {
       setSubmitted(!!participant.submitted);
       setJoined(true);
     } catch (err) {
-      alert("Failed to join: " + err.message);
+      setJoinError("Failed to join: " + err.message);
     }
   };
 
@@ -125,6 +126,7 @@ function ParticipantView() {
 
   const confirmSubmit = async () => {
     setIsSubmitting(true);
+    setSubmitError("");
     try {
       await updateParticipant(event.code, name, {
         scheduleInperson: JSON.stringify(scheduleInperson),
@@ -135,7 +137,8 @@ function ParticipantView() {
       setShowDialog(false);
       setRefreshKey((k) => k + 1);
     } catch (err) {
-      alert("Failed to submit: " + err.message);
+      setSubmitError("Failed to submit: " + err.message);
+      setShowDialog(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -462,6 +465,13 @@ function ParticipantView() {
               />
             )}
 
+            {submitError && (
+              <p
+                style={{ color: "var(--md-sys-color-error)", margin: 0, fontSize: "0.9rem" }}
+              >
+                {submitError}
+              </p>
+            )}
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <AppButton onClick={() => setShowDialog(true)} icon={<MdSend />}>
                 {submitted ? "Update Schedule" : "Submit Schedule"}
