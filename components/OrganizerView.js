@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { GoVerified, GoUnverified } from "react-icons/go";
-import { MdDeleteOutline, MdGroups, MdLogin, MdRefresh, MdSave, MdVideocam } from "react-icons/md";
+import { MdDeleteOutline, MdLogin, MdRefresh, MdSave } from "react-icons/md";
 import EventContext from "@/components/EventContext";
 import AppButton from "@/components/AppButton";
 import ScheduleGrid from "@/components/ScheduleGrid";
@@ -27,14 +27,13 @@ function formatHour(hour) {
 }
 
 function formatMode(mode) {
-  if (mode === "both") return "In-Person + Virtual";
   if (mode === "virtual") return "Virtual";
   return "In-Person";
 }
 
 function OrganizerView() {
   const { event, numSlots } = useContext(EventContext);
-  const mode = event?.mode || "both";
+  const mode = event?.mode || "inperson";
 
   const [participants, setParticipants] = useState([]);
   const [weights, setWeights] = useState({}); // { name: { weight, included } }
@@ -58,7 +57,6 @@ function OrganizerView() {
   const [myInperson, setMyInperson] = useState([]);
   const [myVirtual, setMyVirtual] = useState([]);
   const [mySaving, setMySaving] = useState(false);
-  const [myActiveTab, setMyActiveTab] = useState(mode === "virtual" ? "virtual" : "inperson");
   const [removingName, setRemovingName] = useState("");
 
   // Load participants
@@ -214,8 +212,9 @@ function OrganizerView() {
       if (!w.included) return;
       const weight = w.weight;
       if (weight <= 0) return;
-      totalWeight += weight;
       const schedule = p[scheduleKey];
+      if (schedule.length !== numSlots) return;
+      totalWeight += weight;
       schedule.forEach((val, idx) => {
         total[idx] += val * weight;
       });
@@ -414,31 +413,13 @@ function OrganizerView() {
                 <p style={{ margin: 0, color: "var(--md-sys-color-on-surface-variant)" }}>
                   Editing as <strong>{myName}</strong>. Click cells to toggle availability.
                 </p>
-                {mode === "both" && (
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    <AppButton
-                      onClick={() => setMyActiveTab("inperson")}
-                      variant={myActiveTab === "inperson" ? "filled" : "outlined"}
-                      icon={<MdGroups />}
-                    >
-                      In-Person
-                    </AppButton>
-                    <AppButton
-                      onClick={() => setMyActiveTab("virtual")}
-                      variant={myActiveTab === "virtual" ? "filled" : "outlined"}
-                      icon={<MdVideocam />}
-                    >
-                      Virtual
-                    </AppButton>
-                  </div>
-                )}
                 {mode !== "virtual" && (
                   <ScheduleGrid
                     schedule={myInperson}
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
-                    readOnly={mode === "both" && myActiveTab !== "inperson"}
+                    readOnly={false}
                     showValues={false}
                     onCellPaint={handleMyInpersonPaint}
                   />
@@ -449,7 +430,7 @@ function OrganizerView() {
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
-                    readOnly={mode === "both" && myActiveTab !== "virtual"}
+                    readOnly={false}
                     showValues={false}
                     onCellPaint={handleMyVirtualPaint}
                   />
@@ -600,7 +581,7 @@ function OrganizerView() {
                     selectedDays={event.days}
                     readOnly={true}
                     showValues={true}
-                    label={mode === "both" ? "In-Person" : "Availability"}
+                    label="Availability"
                   />
                 </div>
               )}
@@ -613,7 +594,7 @@ function OrganizerView() {
                     selectedDays={event.days}
                     readOnly={true}
                     showValues={true}
-                    label={mode === "both" ? "Virtual" : "Availability"}
+                    label="Availability"
                   />
                 </div>
               )}
@@ -628,7 +609,7 @@ function OrganizerView() {
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
                 {participants.map((p) => {
-                  const w = weights[p.name] || { weight: 1 };
+                  const w = weights[p.name] || { weight: 1, included: 1 };
                   return (
                     <div className="md-card" key={p.name} style={{ overflowX: "auto" }}>
                       <div
@@ -662,7 +643,7 @@ function OrganizerView() {
                               selectedDays={event.days}
                               readOnly={true}
                               showValues={true}
-                              label={mode === "both" ? "In-Person" : "Availability"}
+                              label="Availability"
                             />
                           </div>
                         )}
@@ -675,7 +656,7 @@ function OrganizerView() {
                               selectedDays={event.days}
                               readOnly={true}
                               showValues={true}
-                              label={mode === "both" ? "Virtual" : "Availability"}
+                              label="Availability"
                             />
                           </div>
                         )}

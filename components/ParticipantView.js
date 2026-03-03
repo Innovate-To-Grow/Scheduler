@@ -80,12 +80,17 @@ function ParticipantView() {
   const calculateAverage = (scheduleKey) => {
     if (!participants.length) return Array(numSlots).fill(0);
     const total = Array(numSlots).fill(0);
+    let validCount = 0;
     participants.forEach((p) => {
-      p[scheduleKey].forEach((val, idx) => {
+      const schedule = p[scheduleKey];
+      if (schedule.length !== numSlots) return;
+      validCount++;
+      schedule.forEach((val, idx) => {
         total[idx] += val;
       });
     });
-    return total.map((v) => parseFloat((v / participants.length).toFixed(2)));
+    if (validCount === 0) return Array(numSlots).fill(0);
+    return total.map((v) => parseFloat((v / validCount).toFixed(2)));
   };
 
   const avgInperson = calculateAverage("inpersonArray");
