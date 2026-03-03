@@ -9,6 +9,7 @@ import ParticipantView from "@/components/ParticipantView";
 import OrganizerView from "@/components/OrganizerView";
 import AppButton from "@/components/AppButton";
 import { fetchEvent, verifyEvent } from "@/lib/api/events";
+import { DAYS_PER_WEEK } from "@/lib/constants";
 
 function EventPage() {
   const searchParams = useSearchParams();
@@ -88,7 +89,7 @@ function EventPage() {
     );
   }
 
-  const numSlots = (event.endHour - event.startHour) * 7;
+  const numSlots = (event.endHour - event.startHour) * DAYS_PER_WEEK;
 
   return (
     <EventContext.Provider value={{ event, isOrganizer, password: managePassword, numSlots }}>

@@ -9,20 +9,8 @@ import { fetchParticipants, joinEvent, updateParticipant } from "@/lib/api/parti
 import "@material/web/slider/slider.js";
 import "@material/web/dialog/dialog.js";
 import "@material/web/textfield/outlined-text-field.js";
-
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-function formatHour(hour) {
-  const h = Number(hour);
-  const period = h >= 12 ? "PM" : "AM";
-  const hour12 = h % 12 === 0 ? 12 : h % 12;
-  return `${hour12}:00 ${period}`;
-}
-
-function formatMode(mode) {
-  if (mode === "virtual") return "Virtual";
-  return "In-Person";
-}
+import { DAY_LABELS } from "@/lib/constants";
+import { formatHour, formatMode } from "@/lib/format";
 
 function ParticipantView() {
   const { event, numSlots } = useContext(EventContext);

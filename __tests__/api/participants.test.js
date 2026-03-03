@@ -14,6 +14,7 @@ import {
   PUT as updateParticipant,
 } from "@/app/api/events/participants/update/route";
 import { generateEventCode, hashPassword } from "@/lib/crypto";
+import { DAYS_PER_WEEK } from "@/lib/constants";
 
 let db;
 let eventCode;
@@ -95,7 +96,7 @@ describe("POST /api/events/participants?code=", () => {
     expect(res.status).toBe(201);
     const { participant } = await res.json();
     expect(participant.name).toBe("Alice");
-    // (17 - 9) * 7 = 56 slots, all 0 (unset/busy by default)
+    // (17 - 9) * DAYS_PER_WEEK = 56 slots, all 0 (unset/busy by default)
     const sched = JSON.parse(participant.schedule_inperson);
     expect(sched).toHaveLength(56);
     expect(sched.every((v) => v === 0)).toBe(true);
@@ -146,7 +147,7 @@ describe("PUT /api/events/participants/update?code=&name=", () => {
   const participantName = "Charlie";
 
   beforeEach(() => {
-    const numSlots = (17 - 9) * 7;
+    const numSlots = (17 - 9) * DAYS_PER_WEEK;
     const defaultSched = JSON.stringify(Array(numSlots).fill(1));
     db.prepare(
       "INSERT INTO participant (event_id, name, schedule_inperson, schedule_virtual) VALUES (?, ?, ?, ?)"
@@ -220,7 +221,7 @@ describe("DELETE /api/events/participants/update?code=&name=", () => {
   const participantName = "Dana";
 
   beforeEach(() => {
-    const numSlots = (17 - 9) * 7;
+    const numSlots = (17 - 9) * DAYS_PER_WEEK;
     const defaultSched = JSON.stringify(Array(numSlots).fill(0));
     db.prepare(
       "INSERT INTO participant (event_id, name, schedule_inperson, schedule_virtual) VALUES (?, ?, ?, ?)"

@@ -1,15 +1,8 @@
 "use client";
 
 import { lerpColor } from "@/components/ColorUtils";
-
-const ALL_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-function formatHour(hour) {
-  if (hour === 0) return "12:00 AM";
-  if (hour < 12) return `${hour}:00 AM`;
-  if (hour === 12) return "12:00 PM";
-  return `${hour - 12}:00 PM`;
-}
+import { DAY_LABELS, DAYS_PER_WEEK } from "@/lib/constants";
+import { formatHour } from "@/lib/format";
 
 /**
  * Reusable schedule grid component.
@@ -34,7 +27,7 @@ function ScheduleGrid({
   label,
 }) {
   const numHours = endHour - startHour;
-  const days = selectedDays ? ALL_DAYS.filter((_, i) => selectedDays.includes(i)) : ALL_DAYS;
+  const days = selectedDays ? DAY_LABELS.filter((_, i) => selectedDays.includes(i)) : DAY_LABELS;
   const dayIndices = selectedDays ?? [0, 1, 2, 3, 4, 5, 6];
 
   const times = [];
@@ -127,7 +120,7 @@ function ScheduleGrid({
               {dayIndices.map((dayIndex, colPos) => (
                 <div key={dayIndex} style={{ display: "flex", flexDirection: "column", flex: 1 }}>
                   {times.map((t, hourIndex) => {
-                    const idx = hourIndex * 7 + dayIndex;
+                    const idx = hourIndex * DAYS_PER_WEEK + dayIndex;
                     const val = parseFloat(schedule[idx] || 0);
                     return (
                       <div

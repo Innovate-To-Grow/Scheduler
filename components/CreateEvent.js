@@ -8,12 +8,10 @@ import { createEvent } from "@/lib/api/events";
 import "@material/web/textfield/outlined-text-field.js";
 import "@material/web/select/outlined-select.js";
 import "@material/web/select/select-option.js";
-
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+import { DAY_LABELS } from "@/lib/constants";
 const MODES = [
   { value: "inperson", label: "In-Person" },
   { value: "virtual", label: "Virtual" },
-  { value: "both", label: "Both" },
 ];
 
 function ToggleChip({ label, active, onClick }) {
@@ -173,7 +171,7 @@ function CreateEvent() {
           </div>
         </div>
 
-        {/* Location (only when inperson or both) */}
+        {/* Location (only when inperson) */}
         {mode !== "virtual" && (
           <md-outlined-text-field
             label="Location / Address"

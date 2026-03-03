@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { DAYS_PER_WEEK } from "@/lib/constants";
 
 export async function PUT(req) {
   try {
@@ -15,7 +16,7 @@ export async function PUT(req) {
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const { scheduleInperson, scheduleVirtual, submitted } = await req.json();
-    const expectedLength = (event.end_hour - event.start_hour) * 7;
+    const expectedLength = (event.end_hour - event.start_hour) * DAYS_PER_WEEK;
 
     function validateSchedule(schedule, label) {
       let arr = schedule;

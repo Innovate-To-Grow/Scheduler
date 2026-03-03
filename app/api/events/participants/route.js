@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { DAYS_PER_WEEK } from "@/lib/constants";
 
 function getEvent(code) {
   return db.prepare("SELECT id, start_hour, end_hour FROM event WHERE code = ?").get(code);
@@ -41,7 +42,7 @@ export async function POST(req) {
     if (trimmedName.length > 100)
       return NextResponse.json({ error: "Name too long (max 100)" }, { status: 400 });
 
-    const numSlots = (event.end_hour - event.start_hour) * 7;
+    const numSlots = (event.end_hour - event.start_hour) * DAYS_PER_WEEK;
     const defaultSchedule = JSON.stringify(Array(numSlots).fill(0));
 
     const existing = db
