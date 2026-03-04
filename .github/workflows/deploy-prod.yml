@@ -118,13 +118,11 @@ jobs:
 
       - name: Ensure ECR repository exists
         run: |
-          terraform -chdir=infra/prod apply -auto-approve -input=false \
-            -target=aws_ecr_repository.app \
-            -target=aws_ecr_lifecycle_policy.app \
-            -var="aws_region=${AWS_REGION}" \
-            -var="image_tag=bootstrap" \
-            -var="ecr_repository_name=${ECR_REPOSITORY}" \
-            -var="github_repository=${GITHUB_REPOSITORY}"
+          if ! aws ecr describe-repositories --repository-names "$ECR_REPOSITORY" >/dev/null 2>&1; then
+            aws ecr create-repository \
+              --repository-name "$ECR_REPOSITORY" \
+              --image-scanning-configuration scanOnPush=true
+          fi
 
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2

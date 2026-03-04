@@ -6,6 +6,8 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+data "aws_caller_identity" "current" {}
+
 locals {
   prefix     = "${var.app_name}-${var.environment}"
   azs        = slice(data.aws_availability_zones.available.names, 0, 2)
@@ -108,36 +110,6 @@ resource "aws_security_group" "ecs" {
   }
 
   tags = merge(local.common_tags, { Name = "${local.prefix}-ecs-sg" })
-}
-
-resource "aws_ecr_repository" "app" {
-  name                 = var.ecr_repository_name
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
-resource "aws_ecr_lifecycle_policy" "app" {
-  repository = aws_ecr_repository.app.name
-
-  policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 1
-        description  = "Keep last 30 images"
-        selection = {
-          tagStatus   = "any"
-          countType   = "imageCountMoreThan"
-          countNumber = 30
-        }
-        action = {
-          type = "expire"
-        }
-      }
-    ]
-  })
 }
 
 resource "aws_cloudwatch_log_group" "app" {
@@ -349,7 +321,7 @@ resource "aws_ecs_task_definition" "app" {
   container_definitions = jsonencode([
     {
       name  = "${local.prefix}-container"
-      image = "${aws_ecr_repository.app.repository_url}:${var.image_tag}"
+      image = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repository_name}:${var.image_tag}"
       essential = true
       portMappings = [
         {

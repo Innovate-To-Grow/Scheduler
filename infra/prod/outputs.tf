@@ -3,7 +3,7 @@ output "alb_dns_name" {
 }
 
 output "ecr_repository_url" {
-  value = aws_ecr_repository.app.repository_url
+  value = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repository_name}"
 }
 
 output "ecs_cluster_name" {
