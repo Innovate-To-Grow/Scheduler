@@ -65,7 +65,7 @@ resource "aws_route_table_association" "public_b" {
 
 resource "aws_security_group" "alb" {
   name        = "${local.prefix}-alb-sg"
-  description = "Allow HTTP ingress"
+  description = "Allow HTTP/HTTPS ingress"
   vpc_id      = aws_vpc.app.id
 
   ingress {
@@ -73,6 +73,16 @@ resource "aws_security_group" "alb" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  dynamic "ingress" {
+    for_each = var.enable_https ? [1] : []
+    content {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
   }
 
   egress {
@@ -293,10 +303,117 @@ resource "aws_lb_target_group" "app" {
   tags = local.common_tags
 }
 
+resource "aws_acm_certificate" "custom_domain" {
+  count = var.enable_https && var.existing_acm_certificate_arn == "" ? 1 : 0
+
+  domain_name       = var.custom_domain
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = local.common_tags
+}
+
+resource "aws_route53_record" "acm_validation" {
+  for_each = var.enable_https && var.existing_acm_certificate_arn == "" ? {
+    for dvo in aws_acm_certificate.custom_domain[0].domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  } : {}
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = var.route53_zone_id
+}
+
+resource "aws_acm_certificate_validation" "custom_domain" {
+  count = var.enable_https && var.existing_acm_certificate_arn == "" ? 1 : 0
+
+  certificate_arn         = aws_acm_certificate.custom_domain[0].arn
+  validation_record_fqdns = [for record in aws_route53_record.acm_validation : record.fqdn]
+
+  timeouts {
+    create = "15m"
+  }
+}
+
+locals {
+  https_certificate_arn = var.enable_https ? (
+    var.existing_acm_certificate_arn != "" ?
+    var.existing_acm_certificate_arn :
+    aws_acm_certificate_validation.custom_domain[0].certificate_arn
+  ) : ""
+}
+
+resource "aws_route53_record" "custom_domain_a" {
+  count = var.enable_https ? 1 : 0
+
+  zone_id = var.route53_zone_id
+  name    = var.custom_domain
+  type    = "A"
+
+  alias {
+    name                   = aws_lb.app.dns_name
+    zone_id                = aws_lb.app.zone_id
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_route53_record" "custom_domain_aaaa" {
+  count = var.enable_https ? 1 : 0
+
+  zone_id = var.route53_zone_id
+  name    = var.custom_domain
+  type    = "AAAA"
+
+  alias {
+    name                   = aws_lb.app.dns_name
+    zone_id                = aws_lb.app.zone_id
+    evaluate_target_health = true
+  }
+}
+
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.app.arn
   port              = 80
   protocol          = "HTTP"
+
+  dynamic "default_action" {
+    for_each = var.enable_https ? [1] : []
+    content {
+      type = "redirect"
+      redirect {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
+    }
+  }
+
+  dynamic "default_action" {
+    for_each = var.enable_https ? [] : [1]
+    content {
+      type             = "forward"
+      target_group_arn = aws_lb_target_group.app.arn
+    }
+  }
+}
+
+resource "aws_lb_listener" "https" {
+  count = var.enable_https ? 1 : 0
+
+  load_balancer_arn = aws_lb.app.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = local.https_certificate_arn
 
   default_action {
     type             = "forward"
@@ -444,7 +561,8 @@ resource "aws_iam_role" "github_actions_deploy" {
           StringLike = {
             "token.actions.githubusercontent.com:sub" = [
               "repo:${var.github_repository}:ref:refs/heads/main",
-              "repo:${var.github_repository}:environment:prod"
+              "repo:${var.github_repository}:environment:prod",
+              "repo:${var.github_repository}:environment:AWS ECS - Prod"
             ]
           }
         }

@@ -127,7 +127,15 @@ terraform init \
 terraform apply \
   -var="aws_region=us-west-2" \
   -var="image_tag=<image-tag>" \
+  -var="custom_domain=scheduler.i2g.ucmerced.edu" \
+  -var="route53_zone_id=Z05097751AKPBGN5RW5GR" \
   -var="github_repository=<owner/repo>"
+```
+
+Production URL after deploy:
+
+```text
+https://scheduler.i2g.ucmerced.edu/
 ```
 
 ### GitHub Actions Variables
@@ -139,10 +147,31 @@ Set these in your repo's GitHub Actions settings:
 - `TF_STATE_BUCKET`
 - `TF_LOCK_TABLE`
 - `ECR_REPOSITORY` — `scheduler-prod`
+- `CUSTOM_DOMAIN` — `scheduler.i2g.ucmerced.edu`
+- `ROUTE53_ZONE_ID` — `Z05097751AKPBGN5RW5GR`
 
 ### GitHub Actions Workflows
 
 - `CI` runs `Lint & Format`, `Test & Build`, and `Docker Build Check` on pull requests and pushes to `main`.
-- `AWS ECS - Prod` runs after successful `CI` on `main`, then builds and pushes the image, applies Terraform, waits for ECS stability, and runs smoke tests.
+- `AWS ECS - Prod` runs after successful `CI` on `main`, then builds and pushes the image, applies Terraform, waits for ECS stability, waits for custom domain DNS resolution, and runs ALB + HTTPS smoke tests.
+
+### HTTPS and Domain Architecture
+
+- TLS terminates at the ALB on port `443`.
+- ACM issues a certificate for `scheduler.i2g.ucmerced.edu` using DNS validation in Route53.
+- Port `80` remains open and redirects traffic to HTTPS.
+- ECS tasks continue to serve HTTP on port `3000` behind the ALB.
+
+### Troubleshooting
+
+- Certificate not issued:
+  - Check ACM certificate status in `us-west-2`.
+  - Verify DNS validation CNAME records exist in Route53 zone `i2g.ucmerced.edu`.
+- DNS not propagated:
+  - Confirm Route53 `A` and `AAAA` alias records for `scheduler.i2g.ucmerced.edu` point to the ALB.
+  - Wait a few minutes and re-run deployment smoke tests.
+- HTTPS not reachable:
+  - Confirm ALB listener `443` exists and is associated with the ACM certificate.
+  - Confirm ALB security group allows inbound `443/tcp`.
 
 Uses OIDC role assumption (no static AWS keys).

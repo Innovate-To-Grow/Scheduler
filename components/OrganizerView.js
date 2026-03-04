@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { GoVerified, GoUnverified } from "react-icons/go";
-import { MdCheck, MdClose, MdDeleteOutline, MdLogin, MdRefresh, MdSave } from "react-icons/md";
+import { MdDeleteOutline, MdLogin, MdRefresh, MdSave } from "react-icons/md";
 import EventContext from "@/components/EventContext";
 import AppButton from "@/components/AppButton";
 import ScheduleGrid from "@/components/ScheduleGrid";
@@ -46,14 +46,7 @@ function OrganizerView() {
   const [myVirtual, setMyVirtual] = useState([]);
   const [mySaving, setMySaving] = useState(false);
   const [removingName, setRemovingName] = useState("");
-  const [confirmRemoveName, setConfirmRemoveName] = useState("");
   const [removeError, setRemoveError] = useState("");
-  const confirmDialogRef = useRef(null);
-
-  useEffect(() => {
-    if (confirmRemoveName && confirmDialogRef.current) confirmDialogRef.current.show();
-    else if (!confirmRemoveName && confirmDialogRef.current) confirmDialogRef.current.close();
-  }, [confirmRemoveName]);
 
   // Load participants and weights in parallel
   useEffect(() => {
@@ -161,15 +154,9 @@ function OrganizerView() {
     }
   };
 
-  const handleRemoveParticipant = (participantName) => {
+  const handleRemoveParticipant = async (participantName) => {
     if (!participantName) return;
     setRemoveError("");
-    setConfirmRemoveName(participantName);
-  };
-
-  const confirmRemoveParticipant = async () => {
-    const participantName = confirmRemoveName;
-    setConfirmRemoveName("");
     setRemovingName(participantName);
     try {
       await deleteParticipant(event.code, participantName);
@@ -567,23 +554,6 @@ function OrganizerView() {
           {removeError}
         </p>
       )}
-
-      <md-dialog ref={confirmDialogRef} onClosed={() => setConfirmRemoveName("")}>
-        <span slot="headline">Confirm Removal</span>
-        <form slot="content" method="dialog" style={{ padding: "0 24px" }}>
-          <p style={{ margin: 0, lineHeight: 1.5 }}>
-            Remove <strong>{confirmRemoveName}</strong> from this event?
-          </p>
-        </form>
-        <div slot="actions">
-          <AppButton onClick={() => setConfirmRemoveName("")} variant="outlined" icon={<MdClose />}>
-            Cancel
-          </AppButton>
-          <AppButton onClick={confirmRemoveParticipant} icon={<MdCheck />}>
-            Remove
-          </AppButton>
-        </div>
-      </md-dialog>
     </div>
   );
 }

@@ -74,6 +74,34 @@ variable "health_check_path" {
   default = "/api/health"
 }
 
+variable "custom_domain" {
+  type    = string
+  default = "scheduler.i2g.ucmerced.edu"
+}
+
+variable "route53_zone_id" {
+  type    = string
+  default = "Z05097751AKPBGN5RW5GR"
+}
+
+variable "enable_https" {
+  type    = bool
+  default = true
+
+  validation {
+    condition = !var.enable_https || (
+      trimspace(var.custom_domain) != "" &&
+      trimspace(var.route53_zone_id) != ""
+    )
+    error_message = "custom_domain and route53_zone_id are required when enable_https is true."
+  }
+}
+
+variable "existing_acm_certificate_arn" {
+  type    = string
+  default = ""
+}
+
 variable "github_oidc_provider_arn" {
   type    = string
   default = ""

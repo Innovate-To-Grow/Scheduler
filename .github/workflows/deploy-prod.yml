@@ -25,6 +25,8 @@ jobs:
       AWS_REGION: ${{ vars.AWS_REGION || 'us-west-2' }}
       AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
       ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'scheduler-prod' }}
+      CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN || 'scheduler.i2g.ucmerced.edu' }}
+      ROUTE53_ZONE_ID: ${{ vars.ROUTE53_ZONE_ID || 'Z05097751AKPBGN5RW5GR' }}
       DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
 
     steps:
@@ -146,6 +148,8 @@ jobs:
             -var="aws_region=${AWS_REGION}" \
             -var="image_tag=${DEPLOY_SHA}" \
             -var="ecr_repository_name=${ECR_REPOSITORY}" \
+            -var="custom_domain=${CUSTOM_DOMAIN}" \
+            -var="route53_zone_id=${ROUTE53_ZONE_ID}" \
             -var="github_repository=${GITHUB_REPOSITORY}"
 
           echo "alb_dns=$(terraform -chdir=infra/prod output -raw alb_dns_name)" >> "$GITHUB_OUTPUT"
@@ -158,7 +162,24 @@ jobs:
             --cluster "${{ steps.tf.outputs.cluster_name }}" \
             --services "${{ steps.tf.outputs.service_name }}"
 
+      - name: Wait for custom domain DNS
+        run: |
+          for i in {1..40}; do
+            if getent hosts "${CUSTOM_DOMAIN}" >/dev/null 2>&1; then
+              echo "Custom domain resolved: ${CUSTOM_DOMAIN}"
+              exit 0
+            fi
+
+            echo "Waiting for DNS propagation (${i}/40): ${CUSTOM_DOMAIN}"
+            sleep 15
+          done
+
+          echo "DNS resolution timeout for ${CUSTOM_DOMAIN}" >&2
+          exit 1
+
       - name: Smoke test
         run: |
           curl --fail --show-error --retry 10 --retry-delay 5 "http://${{ steps.tf.outputs.alb_dns }}/api/health"
           curl --fail --show-error --retry 10 --retry-delay 5 "http://${{ steps.tf.outputs.alb_dns }}/"
+          curl --fail --show-error --retry 10 --retry-delay 5 "https://${CUSTOM_DOMAIN}/api/health"
+          curl --fail --show-error --retry 10 --retry-delay 5 "https://${CUSTOM_DOMAIN}/"
