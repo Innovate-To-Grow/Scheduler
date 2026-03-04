@@ -1,4 +1,4 @@
-name: Deploy Prod
+name: AWS ECS - Prod
 
 on:
   workflow_run:
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: Deploy to ECS
+    name: AWS ECS - Prod
     runs-on: ubuntu-latest
     environment: prod
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}

@@ -53,3 +53,27 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  docker_build_check:
+    name: Docker Build Check
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: false
+          tags: scheduler:ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -63,7 +63,7 @@ The weighted average formula: for each time slot, `sum(availability × weight) /
 | Database       | [DynamoDB](https://aws.amazon.com/dynamodb/) (events, participants, weights tables)  |
 | Infrastructure | AWS ECS Fargate behind an ALB                                                        |
 | IaC            | Terraform (S3 remote state + DynamoDB lock)                                          |
-| CI/CD          | GitHub Actions (lint, test, build, deploy)                                           |
+| CI/CD          | GitHub Actions (lint, test, build, Docker build check, deploy)                       |
 
 ## Local Development
 
@@ -139,5 +139,10 @@ Set these in your repo's GitHub Actions settings:
 - `TF_STATE_BUCKET`
 - `TF_LOCK_TABLE`
 - `ECR_REPOSITORY` — `scheduler-prod`
+
+### GitHub Actions Workflows
+
+- `CI` runs `Lint & Format`, `Test & Build`, and `Docker Build Check` on pull requests and pushes to `main`.
+- `AWS ECS - Prod` runs after successful `CI` on `main`, then builds and pushes the image, applies Terraform, waits for ECS stability, and runs smoke tests.
 
 Uses OIDC role assumption (no static AWS keys).
