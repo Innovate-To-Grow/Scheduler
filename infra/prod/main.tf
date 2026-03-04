@@ -65,7 +65,7 @@ resource "aws_route_table_association" "public_b" {
 
 resource "aws_security_group" "alb" {
   name        = "${local.prefix}-alb-sg"
-  description = "Allow HTTP/HTTPS ingress"
+  description = "Allow HTTP ingress"
   vpc_id      = aws_vpc.app.id
 
   ingress {
