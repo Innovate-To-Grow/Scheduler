@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { DAYS_PER_WEEK } from "@/lib/constants";
+import { schedulerStore } from "@/lib/store";
+import { toApiParticipant } from "@/lib/store/types";
 
 export async function PUT(req) {
   try {
@@ -10,11 +11,11 @@ export async function PUT(req) {
     if (!code || !name)
       return NextResponse.json({ error: "code and name are required" }, { status: 400 });
 
-    const event = db.prepare("SELECT id, start_hour, end_hour FROM event WHERE code = ?").get(code);
+    const event = await schedulerStore.getEvent(code);
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const { scheduleInperson, scheduleVirtual, submitted } = await req.json();
-    const expectedLength = (event.end_hour - event.start_hour) * DAYS_PER_WEEK;
+    const expectedLength = (event.endHour - event.startHour) * DAYS_PER_WEEK;
 
     function validateSchedule(schedule, label) {
       let arr = schedule;
@@ -42,52 +43,35 @@ export async function PUT(req) {
       if (err) return NextResponse.json({ error: err }, { status: 400 });
     }
 
-    const existing = db
-      .prepare(
-        "SELECT id, event_id, name, schedule_inperson, schedule_virtual, submitted, created_at FROM participant WHERE event_id = ? AND name = ?"
-      )
-      .get(event.id, name);
+    const existing = await schedulerStore.getParticipant(code, name);
 
     if (!existing) {
       return NextResponse.json({ error: "Participant not found" }, { status: 404 });
     }
 
-    const updates = [];
-    const queryParams = [];
+    const updates = {};
 
     if (scheduleInperson !== undefined) {
-      updates.push("schedule_inperson = ?");
-      queryParams.push(
-        Array.isArray(scheduleInperson) ? JSON.stringify(scheduleInperson) : scheduleInperson
-      );
+      updates.scheduleInperson = Array.isArray(scheduleInperson)
+        ? JSON.stringify(scheduleInperson)
+        : scheduleInperson;
     }
     if (scheduleVirtual !== undefined) {
-      updates.push("schedule_virtual = ?");
-      queryParams.push(
-        Array.isArray(scheduleVirtual) ? JSON.stringify(scheduleVirtual) : scheduleVirtual
-      );
+      updates.scheduleVirtual = Array.isArray(scheduleVirtual)
+        ? JSON.stringify(scheduleVirtual)
+        : scheduleVirtual;
     }
     if (submitted !== undefined) {
-      updates.push("submitted = ?");
-      queryParams.push(submitted ? 1 : 0);
+      updates.submitted = submitted ? 1 : 0;
     }
 
-    if (updates.length === 0) {
-      return NextResponse.json({ participant: existing });
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ participant: toApiParticipant(existing) });
     }
 
-    queryParams.push(event.id, name);
-    db.prepare(`UPDATE participant SET ${updates.join(", ")} WHERE event_id = ? AND name = ?`).run(
-      ...queryParams
-    );
+    const updated = await schedulerStore.updateParticipant(code, name, updates);
 
-    const updated = db
-      .prepare(
-        "SELECT id, event_id, name, schedule_inperson, schedule_virtual, submitted, created_at FROM participant WHERE event_id = ? AND name = ?"
-      )
-      .get(event.id, name);
-
-    return NextResponse.json({ participant: updated });
+    return NextResponse.json({ participant: toApiParticipant(updated) });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
     const message = status === 500 ? "Internal server error" : err.message;
@@ -103,26 +87,16 @@ export async function DELETE(req) {
     if (!code || !name)
       return NextResponse.json({ error: "code and name are required" }, { status: 400 });
 
-    const event = db.prepare("SELECT id FROM event WHERE code = ?").get(code);
+    const event = await schedulerStore.getEvent(code);
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
-    const existing = db
-      .prepare("SELECT id FROM participant WHERE event_id = ? AND name = ?")
-      .get(event.id, name);
+    const existing = await schedulerStore.getParticipant(code, name);
 
     if (!existing) {
       return NextResponse.json({ error: "Participant not found" }, { status: 404 });
     }
 
-    const tx = db.transaction(() => {
-      db.prepare("DELETE FROM participant_weight WHERE event_id = ? AND participant_name = ?").run(
-        event.id,
-        name
-      );
-      db.prepare("DELETE FROM participant WHERE event_id = ? AND name = ?").run(event.id, name);
-    });
-
-    tx();
+    await schedulerStore.deleteParticipantAndWeight(code, name);
 
     return NextResponse.json({ success: true, removed: { name } });
   } catch (err) {

@@ -1,31 +1,19 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import { generateEventCode, hashPassword } from "@/lib/crypto";
+import { schedulerStore } from "@/lib/store";
+import { toApiEvent } from "@/lib/store/types";
 
 export async function GET(req) {
   try {
     const code = new URL(req.url).searchParams.get("code");
     if (!code) return NextResponse.json({ error: "code is required" }, { status: 400 });
 
-    const event = db
-      .prepare(
-        "SELECT code, name, start_hour, end_hour, days, mode, location, created_at FROM event WHERE code = ?"
-      )
-      .get(code);
+    const event = await schedulerStore.getEvent(code);
 
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     return NextResponse.json({
-      event: {
-        code: event.code,
-        name: event.name,
-        startHour: event.start_hour,
-        endHour: event.end_hour,
-        days: JSON.parse(event.days || "[1,2,3,4,5]"),
-        mode: event.mode || "inperson",
-        location: event.location || "",
-        createdAt: event.created_at,
-      },
+      event: toApiEvent(event),
     });
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -85,23 +73,29 @@ export async function POST(req) {
       return NextResponse.json({ error: "Location too long (max 500)" }, { status: 400 });
     }
 
-    const daysJson = JSON.stringify(selectedDays);
     const passwordHash = hashPassword(password);
 
     // Retry up to 3 times for code collision
-    let code;
+    let created = false;
+    let code = "";
     for (let attempt = 0; attempt < 3; attempt++) {
       code = generateEventCode();
-      const existing = db.prepare("SELECT id FROM event WHERE code = ?").get(code);
-      if (!existing) break;
-      if (attempt === 2) {
-        return NextResponse.json({ error: "Failed to generate unique code" }, { status: 500 });
-      }
+      created = await schedulerStore.createEvent({
+        eventCode: code,
+        name: trimmedName,
+        passwordHash,
+        startHour: start,
+        endHour: end,
+        days: selectedDays,
+        mode: eventMode,
+        location: eventLocation,
+      });
+      if (created) break;
     }
 
-    db.prepare(
-      "INSERT INTO event (code, name, password_hash, start_hour, end_hour, days, mode, location) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-    ).run(code, trimmedName, passwordHash, start, end, daysJson, eventMode, eventLocation);
+    if (!created) {
+      return NextResponse.json({ error: "Failed to generate unique code" }, { status: 500 });
+    }
 
     return NextResponse.json(
       {

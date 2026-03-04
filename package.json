@@ -6,8 +6,9 @@
     "node": ">=20"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.922.0",
+    "@aws-sdk/lib-dynamodb": "^3.922.0",
     "@material/web": "^2.4.1",
-    "better-sqlite3": "^12.6.2",
     "next": "^15.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -33,6 +34,7 @@
     "test:watch": "jest --watch",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "migrate:sqlite-to-dynamodb": "node scripts/migrate-sqlite-to-dynamodb.js",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   }

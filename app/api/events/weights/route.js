@@ -1,21 +1,18 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { schedulerStore } from "@/lib/store";
+import { toApiWeight } from "@/lib/store/types";
 
 export async function GET(req) {
   try {
     const code = new URL(req.url).searchParams.get("code");
     if (!code) return NextResponse.json({ error: "code is required" }, { status: 400 });
 
-    const event = db.prepare("SELECT id FROM event WHERE code = ?").get(code);
+    const event = await schedulerStore.getEvent(code);
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
-    const weights = db
-      .prepare(
-        "SELECT participant_name, weight, included FROM participant_weight WHERE event_id = ?"
-      )
-      .all(event.id);
+    const weights = await schedulerStore.listWeights(code);
 
-    return NextResponse.json({ weights });
+    return NextResponse.json({ weights: weights.map(toApiWeight) });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
     const message = status === 500 ? "Internal server error" : err.message;
@@ -28,7 +25,7 @@ export async function PUT(req) {
     const code = new URL(req.url).searchParams.get("code");
     if (!code) return NextResponse.json({ error: "code is required" }, { status: 400 });
 
-    const event = db.prepare("SELECT id FROM event WHERE code = ?").get(code);
+    const event = await schedulerStore.getEvent(code);
     if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
 
     const { weights } = await req.json();
@@ -36,11 +33,10 @@ export async function PUT(req) {
       return NextResponse.json({ error: "weights must be an array" }, { status: 400 });
     }
 
-    const participantNames = db
-      .prepare("SELECT name FROM participant WHERE event_id = ?")
-      .all(event.id)
-      .map((r) => r.name);
+    const participantNames = await schedulerStore.listParticipantNames(code);
+    const participantNameSet = new Set(participantNames);
 
+    const normalizedWeights = [];
     for (const item of weights) {
       const participantName = item.participantName ?? item.name;
       const w = Number(item.weight !== undefined ? item.weight : 1.0);
@@ -50,42 +46,23 @@ export async function PUT(req) {
       if (item.included !== undefined && item.included !== 0 && item.included !== 1) {
         return NextResponse.json({ error: "Invalid included value" }, { status: 400 });
       }
-      if (!participantNames.includes(participantName)) {
+      if (!participantNameSet.has(participantName)) {
         return NextResponse.json(
           { error: `Participant '${participantName}' not found` },
           { status: 400 }
         );
       }
+      normalizedWeights.push({
+        participantName,
+        weight: item.weight !== undefined ? item.weight : 1.0,
+        included: item.included !== undefined ? item.included : 1,
+      });
     }
 
-    const upsert = db.prepare(`
-      INSERT INTO participant_weight (event_id, participant_name, weight, included)
-      VALUES (?, ?, ?, ?)
-      ON CONFLICT(event_id, participant_name)
-      DO UPDATE SET weight = excluded.weight, included = excluded.included
-    `);
+    await schedulerStore.upsertWeights(code, normalizedWeights);
+    const updated = await schedulerStore.listWeights(code);
 
-    const transaction = db.transaction((items) => {
-      for (const item of items) {
-        const participantName = item.participantName ?? item.name;
-        upsert.run(
-          event.id,
-          participantName,
-          item.weight !== undefined ? item.weight : 1.0,
-          item.included !== undefined ? item.included : 1
-        );
-      }
-    });
-
-    transaction(weights);
-
-    const updated = db
-      .prepare(
-        "SELECT participant_name, weight, included FROM participant_weight WHERE event_id = ?"
-      )
-      .all(event.id);
-
-    return NextResponse.json({ weights: updated });
+    return NextResponse.json({ weights: updated.map(toApiWeight) });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
     const message = status === 500 ? "Internal server error" : err.message;
