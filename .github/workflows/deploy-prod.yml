@@ -18,7 +18,7 @@ jobs:
   deploy:
     name: AWS ECS - Prod
     runs-on: ubuntu-latest
-    environment: prod
+    environment: "AWS ECS - Prod"
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
 
     env:
