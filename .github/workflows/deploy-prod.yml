@@ -104,7 +104,7 @@ jobs:
       - name: Terraform init (remote backend)
         if: ${{ steps.backend.outputs.backend_mode == 'remote' }}
         run: |
-          terraform -chdir=infra/prod init -input=false \
+          terraform -chdir=infra/prod init -reconfigure -input=false \
             -backend-config="bucket=${{ steps.backend.outputs.state_bucket }}" \
             -backend-config="dynamodb_table=${{ steps.backend.outputs.lock_table }}" \
             -backend-config="key=prod/terraform.tfstate" \
@@ -112,7 +112,9 @@ jobs:
 
       - name: Terraform init (local backend fallback)
         if: ${{ steps.backend.outputs.backend_mode == 'local' }}
-        run: terraform -chdir=infra/prod init -backend=false -input=false
+        run: |
+          perl -0777 -i -pe 's/\n\s*backend \"s3\" \{\}\n/\n/s' infra/prod/versions.tf
+          terraform -chdir=infra/prod init -reconfigure -input=false
 
       - name: Ensure ECR repository exists
         run: |
