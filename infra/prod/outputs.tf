@@ -15,5 +15,5 @@ output "ecs_service_name" {
 }
 
 output "github_actions_role_arn" {
-  value = aws_iam_role.github_actions_deploy.arn
+  value = var.create_github_oidc_resources ? aws_iam_role.github_actions_deploy[0].arn : ""
 }
