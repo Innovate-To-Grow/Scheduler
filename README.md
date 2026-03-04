@@ -1,40 +1,87 @@
-# Relevance Weighted Meeting Scheduler
+# Scheduler
 
-A Next.js 15 application for building weighted meeting schedules.
+A group meeting scheduler with weighted availability and real-time aggregation. Create an event, share the link, and find the best time for everyone.
 
-## Architecture
+![Scheduler Screenshot](Screenshoot.png)
 
-- Framework: Next.js 15 (App Router)
-- Frontend: React 18 + Material Web
-- Backend: Next.js Route Handlers (`app/api/**`)
-- Database: DynamoDB (`events`, `participants`, `weights` tables)
-- Runtime: AWS ECS Fargate behind an ALB
+## How to Use
+
+### 1. Create an Event
+
+Go to the home page and fill out the event form:
+
+- **Event Name** — give your meeting a title
+- **Organizer Password** — secures access to the organizer dashboard
+- **Meeting Type** — In-Person (requires a location) or Virtual
+- **Time Range** — set the start and end hours to consider
+- **Days** — pick which days of the week are options (defaults to Mon–Fri)
+
+After creating, you'll be redirected to the organizer dashboard.
+
+### 2. Share the Link
+
+Click **Copy Share Link** in the top-right corner to get a link like:
+
+```
+https://yoursite.com/event?code=j9eaFNJH
+```
+
+Send this to everyone who should participate. No account or sign-up needed.
+
+### 3. Participants Fill In Availability
+
+Each participant:
+
+1. Enters their name and clicks **Join**
+2. Uses the **Availability Slider** to pick a level (0 = Busy, 1 = Free, with 0.25 steps)
+3. Clicks and drags on the **schedule grid** to paint time slots with that availability level
+4. Clicks **Submit Schedule** when done
+
+The grid uses color coding: red (busy) → yellow (partial) → green (free).
+
+After submitting, participants can see the **Group Availability** table showing aggregated scores, plus each person's **Individual Schedule** below it.
+
+### 4. Organizer Dashboard
+
+Access the organizer view by appending `&manage=<password>` to the event URL. The organizer can:
+
+- **Set their own availability** on the same grid
+- **Adjust participant weights** (0.0–1.0) — higher weight means more influence on the group average
+- **Include/exclude participants** from the aggregate calculation
+- **Remove participants** from the event
+- **View the weighted group average** in real time, updated as weights change
+
+The weighted average formula: for each time slot, `sum(availability × weight) / sum(weights)` across all included participants.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | [Next.js 15](https://nextjs.org/) (App Router) |
+| Frontend | React 18 + [Material Web](https://github.com/nicholasgasior/material-web) components |
+| Backend | Next.js Route Handlers (`app/api/`) |
+| Database | [DynamoDB](https://aws.amazon.com/dynamodb/) (events, participants, weights tables) |
+| Infrastructure | AWS ECS Fargate behind an ALB |
+| IaC | Terraform (S3 remote state + DynamoDB lock) |
+| CI/CD | GitHub Actions (lint, test, build, deploy) |
 
 ## Local Development
 
-Install dependencies:
-
 ```bash
-npm install
-```
-
-Run development server:
-
-```bash
-npm run dev
+npm install          # install dependencies
+npm run dev          # start dev server on http://localhost:3000
 ```
 
 Run checks:
 
 ```bash
-npm run lint
-npm test
-npm run build
+npm run lint         # ESLint
+npm run format:check # Prettier
+npm test             # Jest (62 tests)
+npm run build        # production build
 ```
 
 ## Runtime Environment Variables
-
-Application runtime variables:
 
 - `AWS_REGION` (default: `us-west-2`)
 - `DDB_EVENTS_TABLE` (default: `scheduler-prod-events`)
@@ -43,15 +90,9 @@ Application runtime variables:
 
 ## Docker
 
-Build image:
-
 ```bash
 docker build -t scheduler:local .
-```
 
-Run container locally:
-
-```bash
 docker run --rm -p 3000:3000 \
   -e AWS_REGION=us-west-2 \
   -e DDB_EVENTS_TABLE=scheduler-prod-events \
@@ -60,11 +101,9 @@ docker run --rm -p 3000:3000 \
   scheduler:local
 ```
 
-## Terraform Infrastructure
+## Deployment
 
-### 1. Bootstrap remote Terraform state
-
-Create S3 state bucket + DynamoDB lock table:
+### 1. Bootstrap Terraform State
 
 ```bash
 cd infra/bootstrap
@@ -75,10 +114,10 @@ terraform apply \
   -var="lock_table_name=<your-lock-table>"
 ```
 
-### 2. Deploy production infrastructure
+### 2. Deploy Production Infrastructure
 
 ```bash
-cd ../prod
+cd infra/prod
 terraform init \
   -backend-config="bucket=<your-state-bucket>" \
   -backend-config="dynamodb_table=<your-lock-table>" \
@@ -91,59 +130,14 @@ terraform apply \
   -var="github_repository=<owner/repo>"
 ```
 
-Outputs include:
+### GitHub Actions Variables
 
-- `alb_dns_name`
-- `ecr_repository_url`
-- `ecs_cluster_name`
-- `ecs_service_name`
-- `github_actions_role_arn`
+Set these in your repo's GitHub Actions settings:
 
-## GitHub CI/CD
-
-Existing CI remains in `.github/workflows/ci.yml` and runs on PR/push to `main`.
-
-New workflows:
-
-- `.github/workflows/infra-plan.yml`: Terraform `fmt/validate/plan` on infra PRs.
-- `.github/workflows/deploy-prod.yml`: deploy to ECS on successful CI run for `main`.
-
-### Required GitHub Variables (repo/environment)
-
-Set these in GitHub Actions variables:
-
-- `AWS_REGION` (`us-west-2`)
-- `AWS_ROLE_ARN` (OIDC deploy role ARN)
+- `AWS_REGION` — `us-west-2`
+- `AWS_ROLE_ARN` — OIDC deploy role ARN
 - `TF_STATE_BUCKET`
 - `TF_LOCK_TABLE`
-- `ECR_REPOSITORY` (`scheduler-prod`)
+- `ECR_REPOSITORY` — `scheduler-prod`
 
-Use OIDC role assumption only. Do not store static AWS access keys in GitHub secrets.
-
-## One-time SQLite to DynamoDB Migration
-
-If you need to migrate existing SQLite data:
-
-1. Install migration-only dependency:
-
-```bash
-npm i -D better-sqlite3
-```
-
-2. Run migration script:
-
-```bash
-AWS_REGION=us-west-2 \
-DDB_EVENTS_TABLE=scheduler-prod-events \
-DDB_PARTICIPANTS_TABLE=scheduler-prod-participants \
-DDB_WEIGHTS_TABLE=scheduler-prod-weights \
-npm run migrate:sqlite-to-dynamodb -- ./data/scheduler.db
-```
-
-## Cutover Checklist
-
-1. Freeze writes briefly.
-2. Run migration script.
-3. Deploy latest ECS task.
-4. Verify `/api/health`, event creation, participant updates, and weight updates.
-5. Keep SQLite backup for rollback window.
+Uses OIDC role assumption (no static AWS keys).

@@ -41,6 +41,12 @@ variable "desired_count" {
 variable "github_repository" {
   type        = string
   description = "GitHub repository in owner/repo form"
+  default     = ""
+
+  validation {
+    condition     = !var.create_github_oidc_resources || var.github_repository != ""
+    error_message = "github_repository is required when create_github_oidc_resources is true."
+  }
 }
 
 variable "ecr_repository_name" {
@@ -71,6 +77,11 @@ variable "health_check_path" {
 variable "github_oidc_provider_arn" {
   type    = string
   default = ""
+}
+
+variable "create_github_oidc_resources" {
+  type    = bool
+  default = false
 }
 
 variable "availability_zones" {

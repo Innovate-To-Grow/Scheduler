@@ -414,7 +414,7 @@ resource "aws_cloudwatch_metric_alarm" "ecs_running_tasks" {
 }
 
 resource "aws_iam_openid_connect_provider" "github" {
-  count = var.github_oidc_provider_arn == "" ? 1 : 0
+  count = var.create_github_oidc_resources && var.github_oidc_provider_arn == "" ? 1 : 0
 
   client_id_list = ["sts.amazonaws.com"]
   thumbprint_list = [
@@ -423,11 +423,9 @@ resource "aws_iam_openid_connect_provider" "github" {
   url = "https://token.actions.githubusercontent.com"
 }
 
-locals {
-  github_oidc_provider_arn = var.github_oidc_provider_arn != "" ? var.github_oidc_provider_arn : aws_iam_openid_connect_provider.github[0].arn
-}
-
 resource "aws_iam_role" "github_actions_deploy" {
+  count = var.create_github_oidc_resources ? 1 : 0
+
   name = "${local.prefix}-github-actions-deploy"
 
   assume_role_policy = jsonencode({
@@ -436,7 +434,7 @@ resource "aws_iam_role" "github_actions_deploy" {
       {
         Effect = "Allow"
         Principal = {
-          Federated = local.github_oidc_provider_arn
+          Federated = var.github_oidc_provider_arn != "" ? var.github_oidc_provider_arn : aws_iam_openid_connect_provider.github[0].arn
         }
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
@@ -444,7 +442,10 @@ resource "aws_iam_role" "github_actions_deploy" {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
           }
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:${var.github_repository}:ref:refs/heads/main"
+            "token.actions.githubusercontent.com:sub" = [
+              "repo:${var.github_repository}:ref:refs/heads/main",
+              "repo:${var.github_repository}:environment:prod"
+            ]
           }
         }
       }
@@ -455,6 +456,8 @@ resource "aws_iam_role" "github_actions_deploy" {
 }
 
 resource "aws_iam_role_policy_attachment" "github_actions_admin" {
-  role       = aws_iam_role.github_actions_deploy.name
+  count = var.create_github_oidc_resources ? 1 : 0
+
+  role       = aws_iam_role.github_actions_deploy[0].name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
