@@ -117,8 +117,6 @@ resource "aws_ecr_repository" "app" {
   image_scanning_configuration {
     scan_on_push = true
   }
-
-  tags = local.common_tags
 }
 
 resource "aws_ecr_lifecycle_policy" "app" {
