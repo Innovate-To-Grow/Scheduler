@@ -2,15 +2,10 @@ provider "aws" {
   region = var.aws_region
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
 data "aws_caller_identity" "current" {}
 
 locals {
   prefix     = "${var.app_name}-${var.environment}"
-  azs        = slice(data.aws_availability_zones.available.names, 0, 2)
   common_tags = {
     Project     = var.app_name
     Environment = var.environment
@@ -35,7 +30,7 @@ resource "aws_subnet" "public_a" {
   vpc_id                  = aws_vpc.app.id
   cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone       = local.azs[0]
+  availability_zone       = var.availability_zones[0]
   tags                    = merge(local.common_tags, { Name = "${local.prefix}-public-a" })
 }
 
@@ -43,7 +38,7 @@ resource "aws_subnet" "public_b" {
   vpc_id                  = aws_vpc.app.id
   cidr_block              = "10.0.2.0/24"
   map_public_ip_on_launch = true
-  availability_zone       = local.azs[1]
+  availability_zone       = var.availability_zones[1]
   tags                    = merge(local.common_tags, { Name = "${local.prefix}-public-b" })
 }
 
