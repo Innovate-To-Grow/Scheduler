@@ -55,15 +55,15 @@ The weighted average formula: for each time slot, `sum(availability × weight) /
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | [Next.js 15](https://nextjs.org/) (App Router) |
-| Frontend | React 18 + [Material Web](https://github.com/nicholasgasior/material-web) components |
-| Backend | Next.js Route Handlers (`app/api/`) |
-| Database | [DynamoDB](https://aws.amazon.com/dynamodb/) (events, participants, weights tables) |
-| Infrastructure | AWS ECS Fargate behind an ALB |
-| IaC | Terraform (S3 remote state + DynamoDB lock) |
-| CI/CD | GitHub Actions (lint, test, build, deploy) |
+| Layer          | Technology                                                                           |
+| -------------- | ------------------------------------------------------------------------------------ |
+| Framework      | [Next.js 15](https://nextjs.org/) (App Router)                                       |
+| Frontend       | React 18 + [Material Web](https://github.com/nicholasgasior/material-web) components |
+| Backend        | Next.js Route Handlers (`app/api/`)                                                  |
+| Database       | [DynamoDB](https://aws.amazon.com/dynamodb/) (events, participants, weights tables)  |
+| Infrastructure | AWS ECS Fargate behind an ALB                                                        |
+| IaC            | Terraform (S3 remote state + DynamoDB lock)                                          |
+| CI/CD          | GitHub Actions (lint, test, build, deploy)                                           |
 
 ## Local Development
 
