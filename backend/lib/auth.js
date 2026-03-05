@@ -1,6 +1,13 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+const JWT_SECRET =
+  process.env.JWT_SECRET || (process.env.NODE_ENV === "test" ? "test-secret" : undefined);
+
+if (!JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET environment variable is not set");
+  process.exit(1);
+}
+
 const JWT_EXPIRY = "7d";
 
 export function signToken(userId) {

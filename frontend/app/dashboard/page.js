@@ -1,7 +1,7 @@
-import DashboardPage from "@/components/dashboard/DashboardPage";
+import DashboardPageClient from "@/components/dashboard/DashboardPageClient";
 
 export const metadata = { title: "Dashboard - Relevis" };
 
 export default function Dashboard() {
-  return <DashboardPage />;
+  return <DashboardPageClient />;
 }

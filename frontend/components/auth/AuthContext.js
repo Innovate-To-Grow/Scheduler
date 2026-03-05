@@ -39,8 +39,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const refreshUser = useCallback(async () => {
-    const u = await fetchMe();
-    setUser(u);
+    try {
+      const u = await fetchMe();
+      setUser(u);
+    } catch {
+      setUser(null);
+    }
   }, []);
 
   return (

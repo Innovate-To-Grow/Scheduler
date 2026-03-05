@@ -1,4 +1,4 @@
-import { API_BASE } from "./config";
+import { API_BASE, extractError } from "./config";
 
 export async function signup({ email, password, displayName }) {
   const res = await fetch(`${API_BASE}/api/auth/signup`, {
@@ -7,7 +7,7 @@ export async function signup({ email, password, displayName }) {
     credentials: "include",
     body: JSON.stringify({ email, password, displayName }),
   });
-  if (!res.ok) throw new Error((await res.json()).error);
+  if (!res.ok) throw new Error(await extractError(res));
   return res.json();
 }
 
@@ -18,7 +18,7 @@ export async function login({ email, password }) {
     credentials: "include",
     body: JSON.stringify({ email, password }),
   });
-  if (!res.ok) throw new Error((await res.json()).error);
+  if (!res.ok) throw new Error(await extractError(res));
   return res.json();
 }
 
@@ -27,7 +27,7 @@ export async function logout() {
     method: "POST",
     credentials: "include",
   });
-  if (!res.ok) throw new Error((await res.json()).error);
+  if (!res.ok) throw new Error(await extractError(res));
   return res.json();
 }
 
@@ -47,6 +47,6 @@ export async function updateSettings({ displayName, currentPassword, newPassword
     credentials: "include",
     body: JSON.stringify({ displayName, currentPassword, newPassword }),
   });
-  if (!res.ok) throw new Error((await res.json()).error);
+  if (!res.ok) throw new Error(await extractError(res));
   return res.json();
 }

@@ -106,7 +106,7 @@ eventsRouter.post("/", optionalAuth, async (req, res) => {
       return res.status(400).json({ error: "Invalid participantViewPermission value" });
     }
 
-    const passwordHash = password ? hashPassword(password) : null;
+    const passwordHash = password ? await hashPassword(password) : null;
 
     let created = false;
     let code = "";

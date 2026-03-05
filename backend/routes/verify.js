@@ -17,7 +17,7 @@ verifyRouter.post("/", async (req, res) => {
       return res.status(404).json({ error: "Event not found" });
     }
 
-    const valid = verifyPassword(password, event.passwordHash);
+    const valid = await verifyPassword(password, event.passwordHash);
     return res.json({ valid });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;

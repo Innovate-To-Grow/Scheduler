@@ -25,8 +25,10 @@ export async function optionalAuth(req, _res, next) {
       if (user) {
         req.user = user;
       }
-    } catch {
-      // Token invalid — proceed as anonymous
+    } catch (err) {
+      if (err?.name !== "JsonWebTokenError" && err?.name !== "TokenExpiredError") {
+        console.error("[optionalAuth] unexpected error:", err);
+      }
     }
   }
   next();

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import crypto from "crypto";
+import rateLimit from "express-rate-limit";
 import { hashPassword, verifyPassword } from "../lib/crypto.js";
 import { signToken } from "../lib/auth.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -10,21 +11,28 @@ export const authRouter = Router();
 
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  sameSite: "lax",
+  sameSite: "strict",
   secure: process.env.NODE_ENV === "production",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: "/",
 };
 
-authRouter.post("/signup", async (req, res) => {
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20 });
+
+authRouter.post("/signup", authLimiter, async (req, res) => {
   try {
     const { email, password, displayName } = req.body;
 
-    if (!email || typeof email !== "string" || !email.includes("@")) {
+    if (!email || typeof email !== "string" || !emailRegex.test(email.trim())) {
       return res.status(400).json({ error: "Valid email is required" });
     }
     if (!password || typeof password !== "string" || password.length < 6) {
       return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+    if (password.length > 1024) {
+      return res.status(400).json({ error: "Password too long (max 1024 characters)" });
     }
     const trimmedName = (displayName || "").trim();
     if (!trimmedName) {
@@ -41,7 +49,7 @@ authRouter.post("/signup", async (req, res) => {
     }
 
     const userId = crypto.randomUUID();
-    const passwordHash = hashPassword(password);
+    const passwordHash = await hashPassword(password);
     const now = new Date().toISOString();
 
     await schedulerStore.createUser({
@@ -59,12 +67,13 @@ authRouter.post("/signup", async (req, res) => {
     return res.status(201).json({
       user: toApiUser({ userId, email: normalizedEmail, displayName: trimmedName, createdAt: now }),
     });
-  } catch {
+  } catch (err) {
+    console.error("[auth/signup] error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
 
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -78,7 +87,7 @@ authRouter.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    if (!verifyPassword(password, user.passwordHash)) {
+    if (!(await verifyPassword(password, user.passwordHash))) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
@@ -86,7 +95,8 @@ authRouter.post("/login", async (req, res) => {
     res.cookie("token", token, COOKIE_OPTIONS);
 
     return res.json({ user: toApiUser(user) });
-  } catch {
+  } catch (err) {
+    console.error("[auth/login] error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -103,7 +113,8 @@ authRouter.get("/me", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
     return res.json({ user: toApiUser(user) });
-  } catch {
+  } catch (err) {
+    console.error("[auth/me] error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -126,13 +137,16 @@ authRouter.put("/settings", requireAuth, async (req, res) => {
     }
 
     if (newPassword) {
-      if (!currentPassword || !verifyPassword(currentPassword, user.passwordHash)) {
+      if (newPassword.length > 1024) {
+        return res.status(400).json({ error: "Password too long (max 1024 characters)" });
+      }
+      if (!(await verifyPassword(currentPassword, user.passwordHash))) {
         return res.status(401).json({ error: "Current password is incorrect" });
       }
       if (newPassword.length < 6) {
         return res.status(400).json({ error: "New password must be at least 6 characters" });
       }
-      updates.passwordHash = hashPassword(newPassword);
+      updates.passwordHash = await hashPassword(newPassword);
     }
 
     if (Object.keys(updates).length === 0) {
@@ -142,7 +156,8 @@ authRouter.put("/settings", requireAuth, async (req, res) => {
     updates.updatedAt = new Date().toISOString();
     const updated = await schedulerStore.updateUser(req.userId, updates);
     return res.json({ user: toApiUser(updated) });
-  } catch {
+  } catch (err) {
+    console.error("[auth/settings] error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

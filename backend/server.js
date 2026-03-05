@@ -13,7 +13,8 @@ import { dashboardRouter } from "./routes/dashboard.js";
 const app = express();
 const port = process.env.PORT || 4000;
 
-app.use(cors({ origin: true, credentials: true }));
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"];
+app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -33,6 +34,14 @@ app.use((err, _req, res, next) => {
     return res.status(400).json({ error: err.message });
   }
   next(err);
+});
+
+// Catch-all error handler
+app.use((err, _req, res, _next) => {
+  console.error("[server] unhandled error:", err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 if (process.env.NODE_ENV !== "test") {

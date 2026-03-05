@@ -6,6 +6,7 @@ import {
   PutCommand,
   QueryCommand,
   TransactWriteCommand,
+  UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 const DEFAULT_TABLES = {
@@ -295,17 +296,31 @@ export class DynamoSchedulerStore {
   }
 
   async updateUser(userId, updates) {
-    const existing = await this.getUserById(userId);
-    if (!existing) return null;
+    const allowedKeys = ["displayName", "passwordHash", "updatedAt"];
+    const filtered = Object.entries(updates).filter(([k]) => allowedKeys.includes(k));
+    if (filtered.length === 0) return this.getUserById(userId);
 
-    const next = { ...existing, ...updates };
-    await this.doc.send(
-      new PutCommand({
-        TableName: this.tables.users,
-        Item: next,
-      })
-    );
-    return next;
+    const expr = filtered.map(([, ], i) => `#k${i} = :v${i}`).join(", ");
+    const names = Object.fromEntries(filtered.map(([k], i) => [`#k${i}`, k]));
+    const values = Object.fromEntries(filtered.map(([, v], i) => [`:v${i}`, v]));
+
+    try {
+      const res = await this.doc.send(
+        new UpdateCommand({
+          TableName: this.tables.users,
+          Key: { userId },
+          UpdateExpression: `SET ${expr}`,
+          ExpressionAttributeNames: names,
+          ExpressionAttributeValues: values,
+          ConditionExpression: "attribute_exists(userId)",
+          ReturnValues: "ALL_NEW",
+        })
+      );
+      return res.Attributes || null;
+    } catch (err) {
+      if (isConditionalCheckFailed(err)) return null;
+      throw err;
+    }
   }
 
   // --- UserEvent methods ---
@@ -348,19 +363,21 @@ export class DynamoSchedulerStore {
   }
 
   async upsertWeights(eventCode, weights) {
-    for (const item of weights) {
-      await this.doc.send(
-        new PutCommand({
-          TableName: this.tables.weights,
-          Item: {
-            eventCode,
-            participantName: item.participantName,
-            weight: item.weight,
-            included: item.included,
-          },
-        })
-      );
-    }
+    await Promise.all(
+      weights.map((item) =>
+        this.doc.send(
+          new PutCommand({
+            TableName: this.tables.weights,
+            Item: {
+              eventCode,
+              participantName: item.participantName,
+              weight: item.weight,
+              included: item.included,
+            },
+          })
+        )
+      )
+    );
   }
 }
 

@@ -102,7 +102,7 @@ participantsUpdateRouter.delete("/", async (req, res) => {
     }
 
     await schedulerStore.updateParticipant(code, name, { hidden: 1 });
-    return res.json({ success: true, hidden: { name } });
+    return res.json({ success: true });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
     const message = status === 500 ? "Internal server error" : err.message;

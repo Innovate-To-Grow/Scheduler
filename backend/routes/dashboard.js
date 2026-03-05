@@ -12,19 +12,21 @@ dashboardRouter.get("/events", requireAuth, async (req, res) => {
     const organized = [];
     const participating = [];
 
-    for (const ue of userEvents) {
-      const event = await schedulerStore.getEvent(ue.eventCode);
-      if (!event) continue;
+    const events = await Promise.all(userEvents.map((ue) => schedulerStore.getEvent(ue.eventCode)));
+
+    events.forEach((event, i) => {
+      if (!event) return;
       const apiEvent = toApiEvent(event);
-      if (ue.role === "organizer") {
+      if (userEvents[i].role === "organizer") {
         organized.push(apiEvent);
       } else {
         participating.push(apiEvent);
       }
-    }
+    });
 
     return res.json({ organized, participating });
-  } catch {
+  } catch (err) {
+    console.error("[dashboard/events] error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

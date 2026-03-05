@@ -16,7 +16,7 @@ const { default: app } = await import("../../server.js");
 
 const EVENT = {
   eventCode: "EVENT123",
-  passwordHash: hashPassword("eventpass"),
+  passwordHash: await hashPassword("eventpass"),
 };
 
 describe("POST /api/events/verify", () => {

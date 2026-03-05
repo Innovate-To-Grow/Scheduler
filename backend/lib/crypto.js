@@ -1,4 +1,7 @@
 import crypto from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(crypto.scrypt);
 
 export function generateEventCode(length = 8) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -15,17 +18,17 @@ export function generateEventCode(length = 8) {
   return code;
 }
 
-export function hashPassword(password) {
+export async function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString("hex");
-  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
+  const hash = (await scryptAsync(password, salt, 64)).toString("hex");
   return `${salt}:${hash}`;
 }
 
-export function verifyPassword(password, storedHash) {
+export async function verifyPassword(password, storedHash) {
   if (!storedHash || typeof storedHash !== "string") return false;
   const parts = storedHash.split(":");
   if (parts.length !== 2) return false;
   const [salt, hash] = parts;
-  const candidate = crypto.scryptSync(password, salt, 64).toString("hex");
+  const candidate = (await scryptAsync(password, salt, 64)).toString("hex");
   return crypto.timingSafeEqual(Buffer.from(candidate), Buffer.from(hash));
 }

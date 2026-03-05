@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MdSave } from "react-icons/md";
 import AppButton from "@/components/ui/AppButton";
@@ -19,7 +19,19 @@ function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
-  if (authLoading) {
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!initialized) {
+      setDisplayName(user.displayName || "");
+      setInitialized(true);
+    }
+  }, [user, authLoading, initialized, router]);
+
+  if (authLoading || !user || !initialized) {
     return (
       <div
         style={{
@@ -32,16 +44,6 @@ function SettingsPage() {
         <p style={{ color: "var(--md-sys-color-on-surface-variant)" }}>Loading...</p>
       </div>
     );
-  }
-
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
-
-  if (!initialized) {
-    setDisplayName(user.displayName || "");
-    setInitialized(true);
   }
 
   const handleSave = async () => {

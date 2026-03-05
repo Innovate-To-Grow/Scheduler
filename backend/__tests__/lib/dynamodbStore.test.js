@@ -79,5 +79,7 @@ function mockTables() {
     events: "events",
     participants: "participants",
     weights: "weights",
+    users: "users",
+    userEvents: "user-events",
   };
 }

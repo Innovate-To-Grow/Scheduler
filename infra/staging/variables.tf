@@ -86,7 +86,6 @@ variable "user_events_table_name" {
 variable "jwt_secret" {
   type      = string
   sensitive = true
-  default   = "change-me-in-production"
 }
 
 variable "health_check_path" {

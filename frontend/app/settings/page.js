@@ -1,7 +1,7 @@
-import SettingsPage from "@/components/auth/SettingsPage";
+import SettingsPageClient from "@/components/auth/SettingsPageClient";
 
 export const metadata = { title: "Settings - Relevis" };
 
 export default function Settings() {
-  return <SettingsPage />;
+  return <SettingsPageClient />;
 }
