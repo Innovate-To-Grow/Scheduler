@@ -300,7 +300,7 @@ export class DynamoSchedulerStore {
     const filtered = Object.entries(updates).filter(([k]) => allowedKeys.includes(k));
     if (filtered.length === 0) return this.getUserById(userId);
 
-    const expr = filtered.map(([, ], i) => `#k${i} = :v${i}`).join(", ");
+    const expr = filtered.map(([,], i) => `#k${i} = :v${i}`).join(", ");
     const names = Object.fromEntries(filtered.map(([k], i) => [`#k${i}`, k]));
     const values = Object.fromEntries(filtered.map(([, v], i) => [`:v${i}`, v]));
 

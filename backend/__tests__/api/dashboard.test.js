@@ -54,9 +54,7 @@ describe("GET /api/dashboard/events", () => {
         createdAt: "2026-01-02T00:00:00.000Z",
       });
 
-    const res = await request(app)
-      .get("/api/dashboard/events")
-      .set("Cookie", `token=${token}`);
+    const res = await request(app).get("/api/dashboard/events").set("Cookie", `token=${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.organized).toHaveLength(1);
@@ -72,9 +70,7 @@ describe("GET /api/dashboard/events", () => {
     ]);
     schedulerStore.getEvent.mockResolvedValue(null);
 
-    const res = await request(app)
-      .get("/api/dashboard/events")
-      .set("Cookie", `token=${token}`);
+    const res = await request(app).get("/api/dashboard/events").set("Cookie", `token=${token}`);
 
     expect(res.status).toBe(200);
     expect(res.body.organized).toHaveLength(0);

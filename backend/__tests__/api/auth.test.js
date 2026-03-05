@@ -82,11 +82,13 @@ describe("POST /api/auth/signup", () => {
   });
 
   test("returns 400 for password too long", async () => {
-    const res = await request(app).post("/api/auth/signup").send({
-      email: "test@example.com",
-      password: "a".repeat(1025),
-      displayName: "Test",
-    });
+    const res = await request(app)
+      .post("/api/auth/signup")
+      .send({
+        email: "test@example.com",
+        password: "a".repeat(1025),
+        displayName: "Test",
+      });
 
     expect(res.status).toBe(400);
   });
