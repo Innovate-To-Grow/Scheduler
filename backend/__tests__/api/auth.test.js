@@ -117,9 +117,7 @@ describe("GET /api/auth/me", () => {
 
 describe("PUT /api/auth/settings", () => {
   test("returns 401 without token", async () => {
-    const res = await request(app)
-      .put("/api/auth/settings")
-      .send({ displayName: "New Name" });
+    const res = await request(app).put("/api/auth/settings").send({ displayName: "New Name" });
     expect(res.status).toBe(401);
   });
 });

@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MdSave } from "react-icons/md";
-import AppButton from "@/components/AppButton";
-import { useAuth } from "@/components/AuthContext";
+import AppButton from "@/components/ui/AppButton";
+import { useAuth } from "@/components/auth/AuthContext";
 import { updateSettings } from "@/lib/api/auth";
 import "@material/web/textfield/outlined-text-field.js";
 

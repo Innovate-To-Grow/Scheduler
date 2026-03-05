@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MdAdd, MdHourglassEmpty } from "react-icons/md";
-import AppButton from "@/components/AppButton";
-import { useAuth } from "@/components/AuthContext";
+import AppButton from "@/components/ui/AppButton";
+import { useAuth } from "@/components/auth/AuthContext";
 import { createEvent } from "@/lib/api/events";
 import "@material/web/textfield/outlined-text-field.js";
 import "@material/web/select/outlined-select.js";
@@ -115,7 +115,9 @@ function CreateEvent() {
         participantVerification,
         participantViewPermission,
         daySelectionType,
-        ...(daySelectionType === "specific_dates" ? { specificDates: [...specificDates].sort() } : {}),
+        ...(daySelectionType === "specific_dates"
+          ? { specificDates: [...specificDates].sort() }
+          : {}),
       };
       if (!user) payload.password = password;
       const { event, password: pw } = await createEvent(payload);

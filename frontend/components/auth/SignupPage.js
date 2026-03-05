@@ -3,31 +3,36 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { MdLogin } from "react-icons/md";
-import AppButton from "@/components/AppButton";
-import { useAuth } from "@/components/AuthContext";
+import { MdPersonAdd } from "react-icons/md";
+import AppButton from "@/components/ui/AppButton";
+import { useAuth } from "@/components/auth/AuthContext";
 import "@material/web/textfield/outlined-text-field.js";
 
-function LoginPage() {
+function SignupPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     setError("");
-    if (!email || !password) {
-      setError("Email and password are required");
+    const errors = [];
+    if (!email) errors.push("Email is required");
+    if (!password || password.length < 6) errors.push("Password must be at least 6 characters");
+    if (!displayName.trim()) errors.push("Display name is required");
+    if (errors.length > 0) {
+      setError(errors.join(" · "));
       return;
     }
     setLoading(true);
     try {
-      await login({ email, password });
+      await signup({ email, password, displayName: displayName.trim() });
       router.push("/");
     } catch (err) {
-      setError(err.message || "Login failed");
+      setError(err.message || "Sign up failed");
     } finally {
       setLoading(false);
     }
@@ -56,12 +61,20 @@ function LoginPage() {
       >
         <div style={{ textAlign: "center" }}>
           <h1 style={{ color: "var(--md-sys-color-primary)", margin: 0, fontSize: "1.8rem" }}>
-            Login
+            Sign Up
           </h1>
           <p style={{ color: "var(--md-sys-color-on-surface-variant)", margin: "8px 0 0 0" }}>
-            Sign in to your Relevis account
+            Create your Relevis account
           </p>
         </div>
+
+        <md-outlined-text-field
+          label="Display Name"
+          value={displayName}
+          onInput={(e) => setDisplayName(e.target.value)}
+          maxLength="100"
+          style={{ width: "100%" }}
+        ></md-outlined-text-field>
 
         <md-outlined-text-field
           label="Email"
@@ -86,8 +99,8 @@ function LoginPage() {
           </p>
         )}
 
-        <AppButton onClick={handleSubmit} disabled={loading} fullWidth icon={<MdLogin />}>
-          {loading ? "Logging in..." : "Login"}
+        <AppButton onClick={handleSubmit} disabled={loading} fullWidth icon={<MdPersonAdd />}>
+          {loading ? "Creating account..." : "Sign Up"}
         </AppButton>
 
         <p
@@ -98,9 +111,9 @@ function LoginPage() {
             fontSize: "0.9rem",
           }}
         >
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" style={{ color: "var(--md-sys-color-primary)" }}>
-            Sign up
+          Already have an account?{" "}
+          <Link href="/login" style={{ color: "var(--md-sys-color-primary)" }}>
+            Login
           </Link>
         </p>
       </div>
@@ -108,4 +121,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+export default SignupPage;

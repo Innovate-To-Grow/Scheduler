@@ -1,4 +1,4 @@
-import SignupPage from "@/components/SignupPage";
+import SignupPage from "@/components/auth/SignupPage";
 
 export const metadata = { title: "Sign Up - Relevis" };
 

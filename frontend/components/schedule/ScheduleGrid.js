@@ -1,6 +1,6 @@
 "use client";
 
-import { lerpColor } from "@/components/ColorUtils";
+import { lerpColor } from "@/components/ui/ColorUtils";
 import { DAY_LABELS, DAYS_PER_WEEK } from "@/lib/constants";
 import { formatHour } from "@/lib/format";
 
@@ -39,7 +39,7 @@ function ScheduleGrid({
   const numColumns = days.length;
   const dayIndices = isSpecificDates
     ? specificDates.map((_, i) => i)
-    : selectedDays ?? [0, 1, 2, 3, 4, 5, 6];
+    : (selectedDays ?? [0, 1, 2, 3, 4, 5, 6]);
 
   const times = [];
   for (let i = 0; i < numHours; i++) {

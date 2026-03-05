@@ -9,16 +9,16 @@ participantsUpdateRouter.put("/", async (req, res) => {
   try {
     const code = req.query.code;
     const name = req.query.name;
-    if (!code || !name)
-      return res.status(400).json({ error: "code and name are required" });
+    if (!code || !name) return res.status(400).json({ error: "code and name are required" });
 
     const event = await schedulerStore.getEvent(code);
     if (!event) return res.status(404).json({ error: "Event not found" });
 
     const { scheduleInperson, scheduleVirtual, submitted, groupName, sortOrder } = req.body;
-    const numDays = event.daySelectionType === "specific_dates" && Array.isArray(event.specificDates)
-      ? event.specificDates.length
-      : DAYS_PER_WEEK;
+    const numDays =
+      event.daySelectionType === "specific_dates" && Array.isArray(event.specificDates)
+        ? event.specificDates.length
+        : DAYS_PER_WEEK;
     const expectedLength = (event.endHour - event.startHour) * numDays;
 
     function validateSchedule(schedule, label) {
@@ -91,8 +91,7 @@ participantsUpdateRouter.delete("/", async (req, res) => {
   try {
     const code = req.query.code;
     const name = req.query.name;
-    if (!code || !name)
-      return res.status(400).json({ error: "code and name are required" });
+    if (!code || !name) return res.status(400).json({ error: "code and name are required" });
 
     const event = await schedulerStore.getEvent(code);
     if (!event) return res.status(404).json({ error: "Event not found" });
@@ -116,8 +115,7 @@ participantsUpdateRouter.put("/unhide", async (req, res) => {
   try {
     const code = req.query.code;
     const name = req.query.name;
-    if (!code || !name)
-      return res.status(400).json({ error: "code and name are required" });
+    if (!code || !name) return res.status(400).json({ error: "code and name are required" });
 
     const event = await schedulerStore.getEvent(code);
     if (!event) return res.status(404).json({ error: "Event not found" });

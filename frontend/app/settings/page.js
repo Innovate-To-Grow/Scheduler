@@ -1,4 +1,4 @@
-import SettingsPage from "@/components/SettingsPage";
+import SettingsPage from "@/components/auth/SettingsPage";
 
 export const metadata = { title: "Settings - Relevis" };
 

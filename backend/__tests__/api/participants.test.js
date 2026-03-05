@@ -208,7 +208,9 @@ describe("DELETE /api/events/participants/update?code=&name=", () => {
       "/api/events/participants/update?code=EVENT123&name=Dana"
     );
     expect(res.status).toBe(200);
-    expect(schedulerStore.updateParticipant).toHaveBeenCalledWith("EVENT123", "Dana", { hidden: 1 });
+    expect(schedulerStore.updateParticipant).toHaveBeenCalledWith("EVENT123", "Dana", {
+      hidden: 1,
+    });
   });
 
   test("returns 404 for unknown participant", async () => {

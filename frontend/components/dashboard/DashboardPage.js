@@ -4,18 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MdAdd, MdSearch } from "react-icons/md";
-import AppButton from "@/components/AppButton";
-import { useAuth } from "@/components/AuthContext";
+import AppButton from "@/components/ui/AppButton";
+import { useAuth } from "@/components/auth/AuthContext";
 import { fetchDashboardEvents } from "@/lib/api/dashboard";
 import { formatMode } from "@/lib/format";
 import "@material/web/textfield/outlined-text-field.js";
 
 function EventCard({ event }) {
   return (
-    <Link
-      href={`/event?code=${event.code}`}
-      style={{ textDecoration: "none", color: "inherit" }}
-    >
+    <Link href={`/event?code=${event.code}`} style={{ textDecoration: "none", color: "inherit" }}>
       <div
         style={{
           padding: "16px",

@@ -16,9 +16,7 @@ participantsRouter.get("/", async (req, res) => {
 
     const allParticipants = await schedulerStore.listParticipants(code);
     const includeHidden = req.query.includeHidden === "true";
-    const participants = includeHidden
-      ? allParticipants
-      : allParticipants.filter((p) => !p.hidden);
+    const participants = includeHidden ? allParticipants : allParticipants.filter((p) => !p.hidden);
 
     return res.json({ participants: participants.map(toApiParticipant) });
   } catch (err) {
@@ -49,16 +47,17 @@ participantsRouter.post("/", optionalAuth, async (req, res) => {
     }
 
     const { name } = req.body;
-    const trimmedName = verification === "login" && req.user
-      ? (name || req.user.displayName || "").trim()
-      : (name || "").trim();
+    const trimmedName =
+      verification === "login" && req.user
+        ? (name || req.user.displayName || "").trim()
+        : (name || "").trim();
     if (!trimmedName) return res.status(400).json({ error: "Name is required" });
-    if (trimmedName.length > 100)
-      return res.status(400).json({ error: "Name too long (max 100)" });
+    if (trimmedName.length > 100) return res.status(400).json({ error: "Name too long (max 100)" });
 
-    const numDays = event.daySelectionType === "specific_dates" && Array.isArray(event.specificDates)
-      ? event.specificDates.length
-      : DAYS_PER_WEEK;
+    const numDays =
+      event.daySelectionType === "specific_dates" && Array.isArray(event.specificDates)
+        ? event.specificDates.length
+        : DAYS_PER_WEEK;
     const numSlots = (event.endHour - event.startHour) * numDays;
     const defaultSchedule = JSON.stringify(Array(numSlots).fill(0));
 

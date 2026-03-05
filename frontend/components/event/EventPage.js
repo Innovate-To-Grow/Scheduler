@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import EventContext from "@/components/EventContext";
-import EventHeader from "@/components/EventHeader";
-import ParticipantView from "@/components/ParticipantView";
-import OrganizerView from "@/components/OrganizerView";
-import AppButton from "@/components/AppButton";
-import { useAuth } from "@/components/AuthContext";
+import EventContext from "@/components/event/EventContext";
+import EventHeader from "@/components/event/EventHeader";
+import ParticipantView from "@/components/schedule/ParticipantView";
+import OrganizerView from "@/components/schedule/OrganizerView";
+import AppButton from "@/components/ui/AppButton";
+import { useAuth } from "@/components/auth/AuthContext";
 import { fetchEvent, verifyEvent } from "@/lib/api/events";
 import { DAYS_PER_WEEK } from "@/lib/constants";
 
@@ -97,9 +97,10 @@ function EventPage() {
     );
   }
 
-  const numDays = event.daySelectionType === "specific_dates" && Array.isArray(event.specificDates)
-    ? event.specificDates.length
-    : DAYS_PER_WEEK;
+  const numDays =
+    event.daySelectionType === "specific_dates" && Array.isArray(event.specificDates)
+      ? event.specificDates.length
+      : DAYS_PER_WEEK;
   const numSlots = (event.endHour - event.startHour) * numDays;
 
   return (

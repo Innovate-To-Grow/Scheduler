@@ -1,328 +1,327 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap");
 
 :root {
-  /* Material 3 Light Theme Tokens (Blue/Cool dominant) */
-  --md-sys-color-primary: #0061a4;
-  --md-sys-color-on-primary: #ffffff;
-  --md-sys-color-primary-container: #d1e4ff;
-  --md-sys-color-on-primary-container: #001d36;
-  --md-sys-color-secondary: #535f70;
-  --md-sys-color-on-secondary: #ffffff;
-  --md-sys-color-secondary-container: #d7e3f7;
-  --md-sys-color-on-secondary-container: #101c2b;
-  --md-sys-color-surface: #fdfcff;
-  --md-sys-color-on-surface: #1a1c1e;
-  --md-sys-color-surface-variant: #dfe2eb;
-  --md-sys-color-on-surface-variant: #43474e;
-  --md-sys-color-background: #fdfcff;
-  --md-sys-color-on-background: #1a1c1e;
-  --md-sys-color-outline: #73777f;
-  --md-sys-color-surface-container-lowest: #ffffff;
-  --md-sys-color-surface-container-low: #f7f3f9;
-  --md-sys-color-surface-container: #f1edf4;
-  --md-sys-color-surface-container-high: #ebe7ef;
-  --md-sys-color-surface-container-highest: #e6e2ea;
+    /* Material 3 Light Theme Tokens (Blue/Cool dominant) */
+    --md-sys-color-primary: #0061a4;
+    --md-sys-color-on-primary: #ffffff;
+    --md-sys-color-primary-container: #d1e4ff;
+    --md-sys-color-on-primary-container: #001d36;
+    --md-sys-color-secondary: #535f70;
+    --md-sys-color-on-secondary: #ffffff;
+    --md-sys-color-secondary-container: #d7e3f7;
+    --md-sys-color-on-secondary-container: #101c2b;
+    --md-sys-color-surface: #fdfcff;
+    --md-sys-color-on-surface: #1a1c1e;
+    --md-sys-color-surface-variant: #dfe2eb;
+    --md-sys-color-on-surface-variant: #43474e;
+    --md-sys-color-background: #fdfcff;
+    --md-sys-color-on-background: #1a1c1e;
+    --md-sys-color-outline: #73777f;
+    --md-sys-color-surface-container-lowest: #ffffff;
+    --md-sys-color-surface-container-low: #f7f3f9;
+    --md-sys-color-surface-container: #f1edf4;
+    --md-sys-color-surface-container-high: #ebe7ef;
+    --md-sys-color-surface-container-highest: #e6e2ea;
 
-  /* Elevations */
-  --md-sys-elevation-1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
-  --md-sys-elevation-2: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
-  --md-sys-elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+    /* Elevations */
+    --md-sys-elevation-1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-2: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+    --md-sys-elevation-3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
 
-  /* Typography */
-  --md-sys-typescale-body-large-font: "Roboto", sans-serif;
-  --md-sys-typescale-body-medium-font: "Roboto", sans-serif;
-  --md-sys-typescale-body-small-font: "Roboto", sans-serif;
-  --md-sys-typescale-label-large-font: "Roboto", sans-serif;
-  --md-sys-typescale-label-medium-font: "Roboto", sans-serif;
-  --md-sys-typescale-label-small-font: "Roboto", sans-serif;
-  --md-sys-typescale-title-large-font: "Roboto", sans-serif;
-  --md-sys-typescale-title-medium-font: "Roboto", sans-serif;
-  --md-sys-typescale-title-small-font: "Roboto", sans-serif;
-  --md-sys-typescale-headline-large-font: "Roboto", sans-serif;
-  --md-sys-typescale-headline-medium-font: "Roboto", sans-serif;
-  --md-sys-typescale-headline-small-font: "Roboto", sans-serif;
-  --md-sys-typescale-display-large-font: "Roboto", sans-serif;
-  --md-sys-typescale-display-medium-font: "Roboto", sans-serif;
-  --md-sys-typescale-display-small-font: "Roboto", sans-serif;
+    /* Typography */
+    --md-sys-typescale-body-large-font: "Roboto", sans-serif;
+    --md-sys-typescale-body-medium-font: "Roboto", sans-serif;
+    --md-sys-typescale-body-small-font: "Roboto", sans-serif;
+    --md-sys-typescale-label-large-font: "Roboto", sans-serif;
+    --md-sys-typescale-label-medium-font: "Roboto", sans-serif;
+    --md-sys-typescale-label-small-font: "Roboto", sans-serif;
+    --md-sys-typescale-title-large-font: "Roboto", sans-serif;
+    --md-sys-typescale-title-medium-font: "Roboto", sans-serif;
+    --md-sys-typescale-title-small-font: "Roboto", sans-serif;
+    --md-sys-typescale-headline-large-font: "Roboto", sans-serif;
+    --md-sys-typescale-headline-medium-font: "Roboto", sans-serif;
+    --md-sys-typescale-headline-small-font: "Roboto", sans-serif;
+    --md-sys-typescale-display-large-font: "Roboto", sans-serif;
+    --md-sys-typescale-display-medium-font: "Roboto", sans-serif;
+    --md-sys-typescale-display-small-font: "Roboto", sans-serif;
 }
 
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 html {
-  height: 100%;
+    height: 100%;
 }
 
 body {
-  min-height: 100%;
-  margin: 0;
-  font-family: var(--md-sys-typescale-body-large-font, "Roboto", sans-serif);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--md-sys-color-background);
-  color: var(--md-sys-color-on-background);
+    min-height: 100%;
+    margin: 0;
+    font-family: var(--md-sys-typescale-body-large-font, "Roboto", sans-serif);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 button {
-  font: inherit;
+    font: inherit;
 }
 
 /* App button system (replaces md-filled/outlined button) */
 .app-btn {
-  align-items: center;
-  background: var(--md-sys-color-primary);
-  border: 1px solid transparent;
-  border-radius: 9999px;
-  color: var(--md-sys-color-on-primary);
-  cursor: pointer;
-  display: inline-flex;
-  flex-shrink: 1;
-  font-size: 14px;
-  font-weight: 600;
-  gap: 8px;
-  justify-content: center;
-  line-height: 20px;
-  max-inline-size: 100%;
-  min-block-size: 40px;
-  min-inline-size: 0;
-  overflow: hidden;
-  padding: 9px 20px;
-  text-decoration: none;
-  text-overflow: ellipsis;
-  transition:
-    background-color 120ms ease,
+    align-items: center;
+    background: var(--md-sys-color-primary);
+    border: 1px solid transparent;
+    border-radius: 9999px;
+    color: var(--md-sys-color-on-primary);
+    cursor: pointer;
+    display: inline-flex;
+    flex-shrink: 1;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 8px;
+    justify-content: center;
+    line-height: 20px;
+    max-inline-size: 100%;
+    min-block-size: 40px;
+    min-inline-size: 0;
+    overflow: hidden;
+    padding: 9px 20px;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    transition: background-color 120ms ease,
     border-color 120ms ease,
     color 120ms ease,
     opacity 120ms ease;
-  vertical-align: middle;
-  white-space: nowrap;
+    vertical-align: middle;
+    white-space: nowrap;
 }
 
 .app-btn:hover:not(:disabled) {
-  filter: brightness(0.95);
+    filter: brightness(0.95);
 }
 
 .app-btn:active:not(:disabled) {
-  filter: brightness(0.9);
+    filter: brightness(0.9);
 }
 
 .app-btn:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 65%, white);
-  outline-offset: 2px;
+    outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 65%, white);
+    outline-offset: 2px;
 }
 
 .app-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .app-btn-full {
-  inline-size: 100%;
+    inline-size: 100%;
 }
 
 .app-btn-filled {
-  background: var(--md-sys-color-primary);
-  border-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
 }
 
 .app-btn-outlined {
-  background: transparent;
-  border-color: var(--md-sys-color-outline);
-  color: var(--md-sys-color-primary);
+    background: transparent;
+    border-color: var(--md-sys-color-outline);
+    color: var(--md-sys-color-primary);
 }
 
 .app-btn-outlined:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
-  filter: none;
+    background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+    filter: none;
 }
 
 .app-btn-danger {
-  border-color: #b3261e;
-  color: #b3261e;
+    border-color: #b3261e;
+    color: #b3261e;
 }
 
 .app-btn-danger:hover:not(:disabled) {
-  background: color-mix(in srgb, #b3261e 8%, transparent);
+    background: color-mix(in srgb, #b3261e 8%, transparent);
 }
 
 .app-btn-text {
-  background: transparent;
-  border-color: transparent;
-  color: var(--md-sys-color-primary);
-  padding-inline: 12px;
+    background: transparent;
+    border-color: transparent;
+    color: var(--md-sys-color-primary);
+    padding-inline: 12px;
 }
 
 .app-btn-icon {
-  block-size: 18px;
-  display: inline-flex;
-  flex: 0 0 18px;
-  inline-size: 18px;
-  place-content: center;
-  place-items: center;
+    block-size: 18px;
+    display: inline-flex;
+    flex: 0 0 18px;
+    inline-size: 18px;
+    place-content: center;
+    place-items: center;
 }
 
 .app-btn-icon > svg {
-  block-size: 18px;
-  font-size: 18px;
-  inline-size: 18px;
+    block-size: 18px;
+    font-size: 18px;
+    inline-size: 18px;
 }
 
 .app-btn-label {
-  min-inline-size: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Material card helper */
 .md-card {
-  background-color: var(--md-sys-color-surface-container-lowest);
-  border-radius: 16px;
-  box-shadow: var(--md-sys-elevation-1);
-  padding: 24px;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    border-radius: 16px;
+    box-shadow: var(--md-sys-elevation-1);
+    padding: 24px;
 }
 
 @media (max-width: 600px) {
-  .md-card {
-    padding: 16px;
-    border-radius: 12px;
-  }
+    .md-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
 }
 
 /* Custom scrollbar hides */
 .hide-scrollbar::-webkit-scrollbar {
-  display: none;
+    display: none;
 }
 
 .hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Material Web Dialog Theming */
 md-dialog {
-  --md-dialog-container-color: var(--md-sys-color-surface-container-lowest);
-  --md-dialog-headline-color: var(--md-sys-color-on-surface);
-  --md-dialog-headline-font: var(--md-sys-typescale-headline-small-font);
-  --md-dialog-headline-size: 1.25rem;
-  --md-dialog-headline-weight: 600;
-  --md-dialog-supporting-text-color: var(--md-sys-color-on-surface-variant);
-  --md-dialog-supporting-text-font: var(--md-sys-typescale-body-medium-font);
-  --md-dialog-supporting-text-size: 0.95rem;
-  --md-dialog-container-shape: 16px;
+    --md-dialog-container-color: var(--md-sys-color-surface-container-lowest);
+    --md-dialog-headline-color: var(--md-sys-color-on-surface);
+    --md-dialog-headline-font: var(--md-sys-typescale-headline-small-font);
+    --md-dialog-headline-size: 1.25rem;
+    --md-dialog-headline-weight: 600;
+    --md-dialog-supporting-text-color: var(--md-sys-color-on-surface-variant);
+    --md-dialog-supporting-text-font: var(--md-sys-typescale-body-medium-font);
+    --md-dialog-supporting-text-size: 0.95rem;
+    --md-dialog-container-shape: 16px;
 }
 
 /* ── Responsive helpers ─────────────────────────────────── */
 
 /* Page-level containers */
 .page-pad {
-  padding: 40px 24px;
+    padding: 40px 24px;
 }
 
 /* Two-pane flex layout (organizer dashboard) */
 .two-pane {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
 }
 
 /* Sticky event header */
 .event-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 12px 24px;
-  background-color: var(--md-sys-color-surface);
-  border-bottom: 1px solid var(--md-sys-color-surface-variant);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 24px;
+    background-color: var(--md-sys-color-surface);
+    border-bottom: 1px solid var(--md-sys-color-surface-variant);
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .event-header > * {
-  min-width: 0;
+    min-width: 0;
 }
 
 /* Schedule grid inner container */
 .schedule-inner {
-  display: inline-flex;
-  flex-direction: column;
-  min-width: 420px;
-  width: 100%;
+    display: inline-flex;
+    flex-direction: column;
+    min-width: 420px;
+    width: 100%;
 }
 
 /* ── Mobile overrides (≤ 600px) ─────────────────────────── */
 @media (max-width: 600px) {
-  .md-card {
-    padding: 14px;
-    border-radius: 12px;
-  }
+    .md-card {
+        padding: 14px;
+        border-radius: 12px;
+    }
 
-  .page-pad {
-    padding: 16px 12px;
-  }
+    .page-pad {
+        padding: 16px 12px;
+    }
 
-  .event-header {
-    padding: 10px 12px;
-    gap: 8px;
-  }
+    .event-header {
+        padding: 10px 12px;
+        gap: 8px;
+    }
 
-  .event-header h1 {
-    font-size: 1rem;
-  }
+    .event-header h1 {
+        font-size: 1rem;
+    }
 
-  /* Stack two-pane to single column */
-  .two-pane {
-    flex-direction: column;
-  }
+    /* Stack two-pane to single column */
+    .two-pane {
+        flex-direction: column;
+    }
 
-  /* Organizer dashboard title */
-  .organizer-title {
-    font-size: 1.4rem !important;
-  }
+    /* Organizer dashboard title */
+    .organizer-title {
+        font-size: 1.4rem !important;
+    }
 
-  /* Schedule grid: smaller min-width so it fits on phone */
-  .schedule-inner {
-    min-width: 280px;
-  }
+    /* Schedule grid: smaller min-width so it fits on phone */
+    .schedule-inner {
+        min-width: 280px;
+    }
 
-  /* Chip rows wrap tightly */
-  .chip-row {
-    gap: 6px;
-  }
+    /* Chip rows wrap tightly */
+    .chip-row {
+        gap: 6px;
+    }
 
-  /* Time select row: stack vertically on very small screens */
-  .time-row {
-    flex-direction: column;
-  }
+    /* Time select row: stack vertically on very small screens */
+    .time-row {
+        flex-direction: column;
+    }
 
-  /* Dialog */
-  md-dialog {
-    --md-dialog-container-max-inline-size: 95vw;
-  }
+    /* Dialog */
+    md-dialog {
+        --md-dialog-container-max-inline-size: 95vw;
+    }
 
-  /* Make md-select full-width inside stacked time row */
-  .time-row > div {
-    width: 100%;
-  }
+    /* Make md-select full-width inside stacked time row */
+    .time-row > div {
+        width: 100%;
+    }
 }
 
 /* ── Tablet overrides (601 – 900px) ─────────────────────── */
 @media (min-width: 601px) and (max-width: 900px) {
-  .page-pad {
-    padding: 24px 16px;
-  }
+    .page-pad {
+        padding: 24px 16px;
+    }
 
-  .schedule-inner {
-    min-width: 360px;
-  }
+    .schedule-inner {
+        min-width: 360px;
+    }
 }

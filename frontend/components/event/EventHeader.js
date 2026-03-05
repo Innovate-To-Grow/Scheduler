@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useRef, useEffect } from "react";
 import { MdCheck, MdLink, MdPerson, MdLogout, MdSettings, MdLogin } from "react-icons/md";
-import AppButton from "@/components/AppButton";
-import { useAuth } from "@/components/AuthContext";
+import AppButton from "@/components/ui/AppButton";
+import { useAuth } from "@/components/auth/AuthContext";
 
 function UserMenu() {
   const { user, loading, logout } = useAuth();

@@ -22,7 +22,19 @@ eventsRouter.get("/", async (req, res) => {
 
 eventsRouter.post("/", optionalAuth, async (req, res) => {
   try {
-    const { name, password, startHour, endHour, days, mode, location, participantVerification, participantViewPermission, daySelectionType, specificDates } = req.body;
+    const {
+      name,
+      password,
+      startHour,
+      endHour,
+      days,
+      mode,
+      location,
+      participantVerification,
+      participantViewPermission,
+      daySelectionType,
+      specificDates,
+    } = req.body;
 
     const trimmedName = (name || "").trim();
     if (!trimmedName) {
@@ -43,7 +55,9 @@ eventsRouter.post("/", optionalAuth, async (req, res) => {
     }
 
     if (mode && !["virtual", "inperson", "mixed"].includes(mode)) {
-      return res.status(400).json({ error: "Invalid mode. Must be 'inperson', 'virtual', or 'mixed'" });
+      return res
+        .status(400)
+        .json({ error: "Invalid mode. Must be 'inperson', 'virtual', or 'mixed'" });
     }
 
     const start = startHour !== undefined ? startHour : 9;
@@ -77,7 +91,9 @@ eventsRouter.post("/", optionalAuth, async (req, res) => {
         return res.status(400).json({ error: "specificDates must be a non-empty array" });
       }
       if (!specificDates.every((d) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d))) {
-        return res.status(400).json({ error: "specificDates must be ISO date strings (YYYY-MM-DD)" });
+        return res
+          .status(400)
+          .json({ error: "specificDates must be ISO date strings (YYYY-MM-DD)" });
       }
     }
 

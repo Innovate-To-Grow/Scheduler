@@ -3,14 +3,14 @@
 import { useState, useContext, useEffect, useRef } from "react";
 import { MdLogin, MdRefresh, MdSend } from "react-icons/md";
 import Link from "next/link";
-import AppButton from "@/components/AppButton";
-import EventContext from "@/components/EventContext";
-import ScheduleGrid from "@/components/ScheduleGrid";
-import { useAuth } from "@/components/AuthContext";
+import AppButton from "@/components/ui/AppButton";
+import EventContext from "@/components/event/EventContext";
+import ScheduleGrid from "@/components/schedule/ScheduleGrid";
+import { useAuth } from "@/components/auth/AuthContext";
 import { fetchParticipants, joinEvent, updateParticipant } from "@/lib/api/participants";
 import "@material/web/slider/slider.js";
 import "@material/web/textfield/outlined-text-field.js";
-import EventDetailsGrid from "@/components/EventDetailsGrid";
+import EventDetailsGrid from "@/components/event/EventDetailsGrid";
 
 function ParticipantView() {
   const { event, numSlots } = useContext(EventContext);
@@ -475,8 +475,8 @@ function ParticipantView() {
                             startHour={event.startHour}
                             endHour={event.endHour}
                             selectedDays={event.days}
-                    daySelectionType={event.daySelectionType}
-                    specificDates={event.specificDates}
+                            daySelectionType={event.daySelectionType}
+                            specificDates={event.specificDates}
                             readOnly={true}
                             showValues={true}
                             label={mode === "mixed" ? "In-Person" : "Availability"}
@@ -490,8 +490,8 @@ function ParticipantView() {
                             startHour={event.startHour}
                             endHour={event.endHour}
                             selectedDays={event.days}
-                    daySelectionType={event.daySelectionType}
-                    specificDates={event.specificDates}
+                            daySelectionType={event.daySelectionType}
+                            specificDates={event.specificDates}
                             readOnly={true}
                             showValues={true}
                             label={mode === "mixed" ? "Virtual" : "Availability"}

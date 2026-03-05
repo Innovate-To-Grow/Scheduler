@@ -2,10 +2,17 @@
 
 import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { GoVerified, GoUnverified } from "react-icons/go";
-import { MdDeleteOutline, MdLogin, MdRefresh, MdSave, MdArrowUpward, MdArrowDownward } from "react-icons/md";
-import EventContext from "@/components/EventContext";
-import AppButton from "@/components/AppButton";
-import ScheduleGrid from "@/components/ScheduleGrid";
+import {
+  MdDeleteOutline,
+  MdLogin,
+  MdRefresh,
+  MdSave,
+  MdArrowUpward,
+  MdArrowDownward,
+} from "react-icons/md";
+import EventContext from "@/components/event/EventContext";
+import AppButton from "@/components/ui/AppButton";
+import ScheduleGrid from "@/components/schedule/ScheduleGrid";
 import {
   deleteParticipant,
   fetchParticipantsIncludeHidden,
@@ -18,7 +25,7 @@ import "@material/web/checkbox/checkbox.js";
 import "@material/web/slider/slider.js";
 import "@material/web/dialog/dialog.js";
 import "@material/web/textfield/outlined-text-field.js";
-import EventDetailsGrid from "@/components/EventDetailsGrid";
+import EventDetailsGrid from "@/components/event/EventDetailsGrid";
 
 function OrganizerView() {
   const { event, numSlots } = useContext(EventContext);
@@ -201,9 +208,12 @@ function OrganizerView() {
   };
 
   const handleMoveParticipant = async (participantName, direction) => {
-    const sorted = [...activeParticipants].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    const sorted = [...activeParticipants].sort(
+      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+    );
     const idx = sorted.findIndex((p) => p.name === participantName);
-    if ((direction === "up" && idx <= 0) || (direction === "down" && idx >= sorted.length - 1)) return;
+    if ((direction === "up" && idx <= 0) || (direction === "down" && idx >= sorted.length - 1))
+      return;
     const swapIdx = direction === "up" ? idx - 1 : idx + 1;
     const myOrder = sorted[idx].sort_order ?? idx;
     const theirOrder = sorted[swapIdx].sort_order ?? swapIdx;
@@ -412,15 +422,30 @@ function OrganizerView() {
           </div>
 
           <div className="md-card">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
-              <h3 style={{ margin: 0, color: "var(--md-sys-color-on-surface)" }}>
-                Participants
-              </h3>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "12px",
+                flexWrap: "wrap",
+                gap: "8px",
+              }}
+            >
+              <h3 style={{ margin: 0, color: "var(--md-sys-color-on-surface)" }}>Participants</h3>
               <div style={{ display: "flex", gap: "8px" }}>
-                <AppButton variant="outlined" onClick={() => handleCheckAll(true)} style={{ fontSize: "0.8rem" }}>
+                <AppButton
+                  variant="outlined"
+                  onClick={() => handleCheckAll(true)}
+                  style={{ fontSize: "0.8rem" }}
+                >
                   Check All
                 </AppButton>
-                <AppButton variant="outlined" onClick={() => handleCheckAll(false)} style={{ fontSize: "0.8rem" }}>
+                <AppButton
+                  variant="outlined"
+                  onClick={() => handleCheckAll(false)}
+                  style={{ fontSize: "0.8rem" }}
+                >
                   Uncheck All
                 </AppButton>
               </div>
@@ -437,7 +462,13 @@ function OrganizerView() {
               {groupNames.map((gn) => (
                 <div key={gn || "__ungrouped"}>
                   {gn && (
-                    <h4 style={{ margin: "8px 0", color: "var(--md-sys-color-secondary)", fontSize: "0.95rem" }}>
+                    <h4
+                      style={{
+                        margin: "8px 0",
+                        color: "var(--md-sys-color-secondary)",
+                        fontSize: "0.95rem",
+                      }}
+                    >
                       {gn}
                     </h4>
                   )}
@@ -488,14 +519,26 @@ function OrganizerView() {
                             <button
                               onClick={() => handleMoveParticipant(p.name, "up")}
                               title="Move up"
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--md-sys-color-on-surface-variant)", padding: "4px" }}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                color: "var(--md-sys-color-on-surface-variant)",
+                                padding: "4px",
+                              }}
                             >
                               <MdArrowUpward size={18} />
                             </button>
                             <button
                               onClick={() => handleMoveParticipant(p.name, "down")}
                               title="Move down"
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--md-sys-color-on-surface-variant)", padding: "4px" }}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                color: "var(--md-sys-color-on-surface-variant)",
+                                padding: "4px",
+                              }}
                             >
                               <MdArrowDownward size={18} />
                             </button>
@@ -612,7 +655,14 @@ function OrganizerView() {
                   {showHidden ? "▼" : "▶"} Hidden Participants ({hiddenParticipants.length})
                 </button>
                 {showHidden && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "12px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                      marginTop: "12px",
+                    }}
+                  >
                     {hiddenParticipants.map((p) => (
                       <div
                         key={p.name}
@@ -736,8 +786,8 @@ function OrganizerView() {
                               startHour={event.startHour}
                               endHour={event.endHour}
                               selectedDays={event.days}
-                    daySelectionType={event.daySelectionType}
-                    specificDates={event.specificDates}
+                              daySelectionType={event.daySelectionType}
+                              specificDates={event.specificDates}
                               readOnly={true}
                               showValues={true}
                               label={mode === "mixed" ? "In-Person" : "Availability"}
@@ -751,8 +801,8 @@ function OrganizerView() {
                               startHour={event.startHour}
                               endHour={event.endHour}
                               selectedDays={event.days}
-                    daySelectionType={event.daySelectionType}
-                    specificDates={event.specificDates}
+                              daySelectionType={event.daySelectionType}
+                              specificDates={event.specificDates}
                               readOnly={true}
                               showValues={true}
                               label={mode === "mixed" ? "Virtual" : "Availability"}
