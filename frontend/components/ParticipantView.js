@@ -2,9 +2,11 @@
 
 import { useState, useContext, useEffect, useRef } from "react";
 import { MdLogin, MdRefresh, MdSend } from "react-icons/md";
+import Link from "next/link";
 import AppButton from "@/components/AppButton";
 import EventContext from "@/components/EventContext";
 import ScheduleGrid from "@/components/ScheduleGrid";
+import { useAuth } from "@/components/AuthContext";
 import { fetchParticipants, joinEvent, updateParticipant } from "@/lib/api/participants";
 import "@material/web/slider/slider.js";
 import "@material/web/textfield/outlined-text-field.js";
@@ -12,7 +14,10 @@ import EventDetailsGrid from "@/components/EventDetailsGrid";
 
 function ParticipantView() {
   const { event, numSlots } = useContext(EventContext);
+  const { user } = useAuth();
   const mode = event?.mode || "inperson";
+  const verification = event?.participantVerification || "none";
+  const viewPermission = event?.participantViewPermission || "own_only";
   const [name, setName] = useState("");
   const [joined, setJoined] = useState(false);
   const [scheduleInperson, setScheduleInperson] = useState([]);
@@ -102,11 +107,9 @@ function ParticipantView() {
     }
   };
 
-  const handleCellPaint = (idx, e) => {
-    const setter = mode === "inperson" ? setScheduleInperson : setScheduleVirtual;
-    const currentSchedule = mode === "inperson" ? scheduleInperson : scheduleVirtual;
+  const makeCellPaintHandler = (setter, schedule) => (idx, e) => {
     if (e.type === "mousedown") {
-      paintModeRef.current = currentSchedule[idx] > 0 ? "erase" : "paint";
+      paintModeRef.current = schedule[idx] > 0 ? "erase" : "paint";
     }
     setter((prev) => {
       const next = [...prev];
@@ -114,6 +117,9 @@ function ParticipantView() {
       return next;
     });
   };
+
+  const handleInpersonPaint = makeCellPaintHandler(setScheduleInperson, scheduleInperson);
+  const handleVirtualPaint = makeCellPaintHandler(setScheduleVirtual, scheduleVirtual);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -158,11 +164,38 @@ function ParticipantView() {
           <div style={{ textAlign: "center" }}>
             <h2 style={{ color: "var(--md-sys-color-primary)", margin: 0 }}>Join Event</h2>
             <p style={{ color: "var(--md-sys-color-on-surface-variant)", margin: "8px 0 0 0" }}>
-              Enter your name to mark availability.
+              {verification === "login"
+                ? "Login required to mark availability."
+                : "Enter your name to mark availability."}
             </p>
           </div>
 
           <EventDetailsGrid event={event} />
+
+          {verification === "login" && !user && (
+            <div
+              className="md-card"
+              style={{ textAlign: "center", background: "var(--md-sys-color-surface-variant)" }}
+            >
+              <p style={{ margin: "0 0 12px 0" }}>
+                This event requires you to log in before joining.
+              </p>
+              <Link href="/login">
+                <AppButton icon={<MdLogin />}>Login</AppButton>
+              </Link>
+            </div>
+          )}
+
+          {(verification === "email_link" || verification === "phone") && (
+            <div
+              className="md-card"
+              style={{ textAlign: "center", background: "var(--md-sys-color-surface-variant)" }}
+            >
+              <p style={{ margin: 0, color: "var(--md-sys-color-on-surface-variant)" }}>
+                {verification === "email_link" ? "Email link" : "Phone"} verification coming soon.
+              </p>
+            </div>
+          )}
 
           <div
             style={{
@@ -216,43 +249,53 @@ function ParticipantView() {
             )}
           </div>
 
-          <md-outlined-text-field
-            label="Your Name"
-            value={name}
-            onInput={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-            maxLength="100"
-            style={{ width: "100%" }}
-          ></md-outlined-text-field>
-          {joinError && (
-            <p style={{ color: "var(--md-sys-color-error)", margin: 0, fontSize: "0.9rem" }}>
-              {joinError}
-            </p>
+          {(verification === "none" || (verification === "login" && user)) && (
+            <>
+              {verification !== "login" && (
+                <md-outlined-text-field
+                  label="Your Name"
+                  value={name}
+                  onInput={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+                  maxLength="100"
+                  style={{ width: "100%" }}
+                ></md-outlined-text-field>
+              )}
+              {joinError && (
+                <p style={{ color: "var(--md-sys-color-error)", margin: 0, fontSize: "0.9rem" }}>
+                  {joinError}
+                </p>
+              )}
+              {verification !== "login" && suggestions.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {suggestions.map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => handleJoin(n)}
+                      style={{
+                        padding: "4px 12px",
+                        borderRadius: "16px",
+                        border: "1px solid var(--md-sys-color-outline)",
+                        background: "var(--md-sys-color-surface-variant)",
+                        color: "var(--md-sys-color-on-surface-variant)",
+                        cursor: "pointer",
+                        fontSize: "0.875rem",
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <AppButton
+                onClick={() => handleJoin(verification === "login" ? user.displayName : undefined)}
+                fullWidth={true}
+                icon={<MdLogin />}
+              >
+                {verification === "login" ? `Join as ${user.displayName}` : "Join"}
+              </AppButton>
+            </>
           )}
-          {suggestions.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {suggestions.map((n) => (
-                <button
-                  key={n}
-                  onClick={() => handleJoin(n)}
-                  style={{
-                    padding: "4px 12px",
-                    borderRadius: "16px",
-                    border: "1px solid var(--md-sys-color-outline)",
-                    background: "var(--md-sys-color-surface-variant)",
-                    color: "var(--md-sys-color-on-surface-variant)",
-                    cursor: "pointer",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-          )}
-          <AppButton onClick={() => handleJoin()} fullWidth={true} icon={<MdLogin />}>
-            Join
-          </AppButton>
         </div>
       </div>
     );
@@ -345,7 +388,8 @@ function ParticipantView() {
                 selectedDays={event.days}
                 readOnly={false}
                 showValues={false}
-                onCellPaint={handleCellPaint}
+                onCellPaint={handleInpersonPaint}
+                label={mode === "mixed" ? "In-Person" : undefined}
               />
             )}
             {mode !== "inperson" && (
@@ -356,7 +400,8 @@ function ParticipantView() {
                 selectedDays={event.days}
                 readOnly={false}
                 showValues={false}
-                onCellPaint={handleCellPaint}
+                onCellPaint={handleVirtualPaint}
+                label={mode === "mixed" ? "Virtual" : undefined}
               />
             )}
 
@@ -387,9 +432,11 @@ function ParticipantView() {
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                     readOnly={true}
                     showValues={true}
-                    label="Availability"
+                    label={mode === "mixed" ? "In-Person Availability" : "Availability"}
                   />
                 </div>
               )}
@@ -400,16 +447,18 @@ function ParticipantView() {
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                     readOnly={true}
                     showValues={true}
-                    label="Availability"
+                    label={mode === "mixed" ? "Virtual Availability" : "Availability"}
                   />
                 </div>
               )}
             </div>
           </div>
 
-          {participants.length > 0 && (
+          {viewPermission !== "own_only" && participants.length > 0 && (
             <div>
               <h3 style={{ margin: "0 0 16px 0", color: "var(--md-sys-color-on-surface)" }}>
                 Individual Schedules
@@ -426,9 +475,11 @@ function ParticipantView() {
                             startHour={event.startHour}
                             endHour={event.endHour}
                             selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                             readOnly={true}
                             showValues={true}
-                            label="Availability"
+                            label={mode === "mixed" ? "In-Person" : "Availability"}
                           />
                         </div>
                       )}
@@ -439,9 +490,11 @@ function ParticipantView() {
                             startHour={event.startHour}
                             endHour={event.endHour}
                             selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                             readOnly={true}
                             showValues={true}
-                            label="Availability"
+                            label={mode === "mixed" ? "Virtual" : "Availability"}
                           />
                         </div>
                       )}

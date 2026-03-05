@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import { GoVerified, GoUnverified } from "react-icons/go";
-import { MdDeleteOutline, MdLogin, MdRefresh, MdSave } from "react-icons/md";
+import { MdDeleteOutline, MdLogin, MdRefresh, MdSave, MdArrowUpward, MdArrowDownward } from "react-icons/md";
 import EventContext from "@/components/EventContext";
 import AppButton from "@/components/AppButton";
 import ScheduleGrid from "@/components/ScheduleGrid";
 import {
   deleteParticipant,
-  fetchParticipants,
+  fetchParticipantsIncludeHidden,
   joinEvent,
+  unhideParticipant,
   updateParticipant,
 } from "@/lib/api/participants";
 import { fetchWeights, updateWeights } from "@/lib/api/weights";
@@ -45,15 +46,17 @@ function OrganizerView() {
   const [myInperson, setMyInperson] = useState([]);
   const [myVirtual, setMyVirtual] = useState([]);
   const [mySaving, setMySaving] = useState(false);
-  const [removingName, setRemovingName] = useState("");
-  const [removeError, setRemoveError] = useState("");
+  const [hidingName, setHidingName] = useState("");
+  const [hideError, setHideError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showHidden, setShowHidden] = useState(false);
 
   // Load participants and weights in parallel
   useEffect(() => {
     async function load() {
       try {
         const [participantsRes, weightsRes] = await Promise.all([
-          fetchParticipants(event.code),
+          fetchParticipantsIncludeHidden(event.code),
           fetchWeights(event.code),
         ]);
 
@@ -154,39 +157,112 @@ function OrganizerView() {
     }
   };
 
-  const handleRemoveParticipant = async (participantName) => {
+  const handleHideParticipant = async (participantName) => {
     if (!participantName) return;
-    setRemoveError("");
-    setRemovingName(participantName);
+    setHideError("");
+    setHidingName(participantName);
     try {
       await deleteParticipant(event.code, participantName);
-
-      setParticipants((prev) => prev.filter((p) => p.name !== participantName));
-      setWeights((prev) => {
-        const next = { ...prev };
-        delete next[participantName];
-        return next;
-      });
-
-      if (myJoined && myName === participantName) {
-        setMyJoined(false);
-        setMyInperson([]);
-        setMyVirtual([]);
-      }
+      setParticipants((prev) =>
+        prev.map((p) => (p.name === participantName ? { ...p, hidden: 1 } : p))
+      );
     } catch (err) {
-      setRemoveError(`Failed to remove participant: ${err.message}`);
+      setHideError(`Failed to hide participant: ${err.message}`);
     } finally {
-      setRemovingName("");
+      setHidingName("");
     }
   };
 
-  // Calculate weighted average for a given schedule type
+  const handleUnhideParticipant = async (participantName) => {
+    if (!participantName) return;
+    setHideError("");
+    setHidingName(participantName);
+    try {
+      await unhideParticipant(event.code, participantName);
+      setParticipants((prev) =>
+        prev.map((p) => (p.name === participantName ? { ...p, hidden: 0 } : p))
+      );
+    } catch (err) {
+      setHideError(`Failed to unhide participant: ${err.message}`);
+    } finally {
+      setHidingName("");
+    }
+  };
+
+  const handleGroupChange = async (participantName, groupName) => {
+    try {
+      await updateParticipant(event.code, participantName, { groupName });
+      setParticipants((prev) =>
+        prev.map((p) => (p.name === participantName ? { ...p, group_name: groupName } : p))
+      );
+    } catch (err) {
+      console.error("Failed to update group:", err);
+    }
+  };
+
+  const handleMoveParticipant = async (participantName, direction) => {
+    const sorted = [...activeParticipants].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    const idx = sorted.findIndex((p) => p.name === participantName);
+    if ((direction === "up" && idx <= 0) || (direction === "down" && idx >= sorted.length - 1)) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    const myOrder = sorted[idx].sort_order ?? idx;
+    const theirOrder = sorted[swapIdx].sort_order ?? swapIdx;
+    try {
+      await Promise.all([
+        updateParticipant(event.code, sorted[idx].name, { sortOrder: theirOrder }),
+        updateParticipant(event.code, sorted[swapIdx].name, { sortOrder: myOrder }),
+      ]);
+      setParticipants((prev) =>
+        prev.map((p) => {
+          if (p.name === sorted[idx].name) return { ...p, sort_order: theirOrder };
+          if (p.name === sorted[swapIdx].name) return { ...p, sort_order: myOrder };
+          return p;
+        })
+      );
+    } catch (err) {
+      console.error("Failed to reorder:", err);
+    }
+  };
+
+  const handleCheckAll = (included) => {
+    const next = { ...weightsRef.current };
+    activeParticipants.forEach((p) => {
+      const current = next[p.name] ?? { weight: 1.0, included: 1 };
+      next[p.name] = { ...current, included: included ? 1 : 0 };
+    });
+    weightsRef.current = next;
+    setWeights(next);
+    saveWeights(next);
+  };
+
+  const activeParticipants = participants
+    .filter((p) => !p.hidden)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+  const hiddenParticipants = participants.filter((p) => p.hidden);
+  const filteredParticipants = searchQuery
+    ? activeParticipants.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : activeParticipants;
+
+  // Group participants by group_name
+  const groups = {};
+  filteredParticipants.forEach((p) => {
+    const gn = p.group_name || "";
+    if (!groups[gn]) groups[gn] = [];
+    groups[gn].push(p);
+  });
+  const groupNames = Object.keys(groups).sort((a, b) => {
+    if (!a) return 1;
+    if (!b) return -1;
+    return a.localeCompare(b);
+  });
+
+  // Calculate weighted average for a given schedule type (excludes hidden)
   const calculateWeightedAverage = (scheduleKey) => {
-    if (!participants.length) return Array(numSlots).fill(0);
+    if (!activeParticipants.length) return Array(numSlots).fill(0);
     const total = Array(numSlots).fill(0);
     let totalWeight = 0;
 
-    participants.forEach((p) => {
+    activeParticipants.forEach((p) => {
       // Use defaults for participants not yet in the weights map
       const w = weights[p.name] ?? { weight: 1.0, included: 1 };
       if (!w.included) return;
@@ -206,7 +282,21 @@ function OrganizerView() {
 
   const weightedInperson = calculateWeightedAverage("inpersonArray");
   const weightedVirtual = calculateWeightedAverage("virtualArray");
-  const submittedCount = participants.filter((p) => p.submitted).length;
+  const submittedCount = activeParticipants.filter((p) => p.submitted).length;
+
+  const inpersonDetails = activeParticipants
+    .filter((p) => {
+      const w = weights[p.name] ?? { weight: 1.0, included: 1 };
+      return w.included && p.inpersonArray.length === numSlots;
+    })
+    .map((p) => ({ name: p.name, schedule: p.inpersonArray }));
+
+  const virtualDetails = activeParticipants
+    .filter((p) => {
+      const w = weights[p.name] ?? { weight: 1.0, included: 1 };
+      return w.included && p.virtualArray.length === numSlots;
+    })
+    .map((p) => ({ name: p.name, schedule: p.virtualArray }));
 
   return (
     <div className="page-pad" style={{ maxWidth: "1400px", margin: "0 auto" }}>
@@ -252,8 +342,8 @@ function OrganizerView() {
         <EventDetailsGrid
           event={event}
           extraCards={[
-            { label: "Participants", value: participants.length },
-            { label: "Submitted", value: `${submittedCount} / ${participants.length}` },
+            { label: "Participants", value: activeParticipants.length },
+            { label: "Submitted", value: `${submittedCount} / ${activeParticipants.length}` },
           ]}
         />
       </div>
@@ -292,9 +382,12 @@ function OrganizerView() {
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                     readOnly={false}
                     showValues={false}
                     onCellPaint={handleMyInpersonPaint}
+                    label={mode === "mixed" ? "In-Person" : undefined}
                   />
                 )}
                 {mode !== "inperson" && (
@@ -303,9 +396,12 @@ function OrganizerView() {
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                     readOnly={false}
                     showValues={false}
                     onCellPaint={handleMyVirtualPaint}
+                    label={mode === "mixed" ? "Virtual" : undefined}
                   />
                 )}
                 <AppButton onClick={handleMySave} disabled={mySaving} icon={<MdSave />}>
@@ -316,103 +412,176 @@ function OrganizerView() {
           </div>
 
           <div className="md-card">
-            <h3 style={{ margin: "0 0 16px 0", color: "var(--md-sys-color-on-surface)" }}>
-              Participants
-            </h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+              <h3 style={{ margin: 0, color: "var(--md-sys-color-on-surface)" }}>
+                Participants
+              </h3>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <AppButton variant="outlined" onClick={() => handleCheckAll(true)} style={{ fontSize: "0.8rem" }}>
+                  Check All
+                </AppButton>
+                <AppButton variant="outlined" onClick={() => handleCheckAll(false)} style={{ fontSize: "0.8rem" }}>
+                  Uncheck All
+                </AppButton>
+              </div>
+            </div>
+
+            <md-outlined-text-field
+              label="Search participants"
+              value={searchQuery}
+              onInput={(e) => setSearchQuery(e.target.value)}
+              style={{ width: "100%", marginBottom: "16px" }}
+            ></md-outlined-text-field>
+
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {participants.map((p) => {
-                const w = weights[p.name] || { weight: 1, included: 1 };
-                return (
-                  <div
-                    key={p.name}
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                      padding: "16px",
-                      border: "1px solid var(--md-sys-color-surface-variant)",
-                      borderRadius: "12px",
-                      backgroundColor: w.included
-                        ? "var(--md-sys-color-surface-container-low)"
-                        : "var(--md-sys-color-surface)",
-                      opacity: w.included ? 1 : 0.5,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <md-checkbox
-                          checked={w.included ? true : undefined}
-                          onInput={(e) => handleIncludedChange(p.name, e.target.checked)}
-                        ></md-checkbox>
-                        <span style={{ fontWeight: "600", fontSize: "1.1rem" }}>{p.name}</span>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span
+              {groupNames.map((gn) => (
+                <div key={gn || "__ungrouped"}>
+                  {gn && (
+                    <h4 style={{ margin: "8px 0", color: "var(--md-sys-color-secondary)", fontSize: "0.95rem" }}>
+                      {gn}
+                    </h4>
+                  )}
+                  {groups[gn].map((p) => {
+                    const w = weights[p.name] || { weight: 1, included: 1 };
+                    return (
+                      <div
+                        key={p.name}
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "12px",
+                          padding: "16px",
+                          border: "1px solid var(--md-sys-color-surface-variant)",
+                          borderRadius: "12px",
+                          backgroundColor: w.included
+                            ? "var(--md-sys-color-surface-container-low)"
+                            : "var(--md-sys-color-surface)",
+                          opacity: w.included ? 1 : 0.5,
+                          marginBottom: "8px",
+                        }}
+                      >
+                        <div
                           style={{
-                            color: p.submitted
-                              ? "var(--md-sys-color-primary)"
-                              : "var(--md-sys-color-outline)",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
                           }}
-                          title={p.submitted ? "Submitted" : "Not submitted"}
                         >
-                          {p.submitted ? <GoVerified size={20} /> : <GoUnverified size={20} />}
-                        </span>
-                        <AppButton
-                          variant="outlined"
-                          icon={<MdDeleteOutline />}
-                          onClick={() => handleRemoveParticipant(p.name)}
-                          disabled={removingName === p.name}
-                          className="app-btn-danger"
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <md-checkbox
+                              checked={w.included ? true : undefined}
+                              onInput={(e) => handleIncludedChange(p.name, e.target.checked)}
+                            ></md-checkbox>
+                            <span style={{ fontWeight: "600", fontSize: "1.1rem" }}>{p.name}</span>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <span
+                              style={{
+                                color: p.submitted
+                                  ? "var(--md-sys-color-primary)"
+                                  : "var(--md-sys-color-outline)",
+                              }}
+                              title={p.submitted ? "Submitted" : "Not submitted"}
+                            >
+                              {p.submitted ? <GoVerified size={20} /> : <GoUnverified size={20} />}
+                            </span>
+                            <button
+                              onClick={() => handleMoveParticipant(p.name, "up")}
+                              title="Move up"
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--md-sys-color-on-surface-variant)", padding: "4px" }}
+                            >
+                              <MdArrowUpward size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleMoveParticipant(p.name, "down")}
+                              title="Move down"
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--md-sys-color-on-surface-variant)", padding: "4px" }}
+                            >
+                              <MdArrowDownward size={18} />
+                            </button>
+                            <AppButton
+                              variant="outlined"
+                              icon={<MdDeleteOutline />}
+                              onClick={() => handleHideParticipant(p.name)}
+                              disabled={hidingName === p.name}
+                              className="app-btn-danger"
+                            >
+                              {hidingName === p.name ? "Hiding..." : "Hide"}
+                            </AppButton>
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "16px",
+                            paddingLeft: "40px",
+                          }}
                         >
-                          {removingName === p.name ? "Removing..." : "Remove"}
-                        </AppButton>
+                          <span
+                            style={{
+                              fontSize: "0.9rem",
+                              color: "var(--md-sys-color-on-surface-variant)",
+                            }}
+                          >
+                            Weight
+                          </span>
+                          <md-slider
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={w.weight}
+                            onInput={(e) => handleWeightChange(p.name, Number(e.target.value))}
+                            style={{ flex: 1 }}
+                          ></md-slider>
+                          <span
+                            style={{
+                              minWidth: "36px",
+                              textAlign: "right",
+                              fontWeight: "500",
+                              color: "var(--md-sys-color-primary)",
+                            }}
+                          >
+                            {w.weight.toFixed(2)}
+                          </span>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            paddingLeft: "40px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontSize: "0.85rem",
+                              color: "var(--md-sys-color-on-surface-variant)",
+                            }}
+                          >
+                            Group
+                          </span>
+                          <input
+                            type="text"
+                            value={p.group_name || ""}
+                            onChange={(e) => handleGroupChange(p.name, e.target.value)}
+                            placeholder="(none)"
+                            style={{
+                              flex: 1,
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              border: "1px solid var(--md-sys-color-outline)",
+                              fontSize: "0.85rem",
+                              background: "var(--md-sys-color-surface)",
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "16px",
-                        paddingLeft: "40px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: "0.9rem",
-                          color: "var(--md-sys-color-on-surface-variant)",
-                        }}
-                      >
-                        Weight
-                      </span>
-                      <md-slider
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={w.weight}
-                        onInput={(e) => handleWeightChange(p.name, Number(e.target.value))}
-                        style={{ flex: 1 }}
-                      ></md-slider>
-                      <span
-                        style={{
-                          minWidth: "36px",
-                          textAlign: "right",
-                          fontWeight: "500",
-                          color: "var(--md-sys-color-primary)",
-                        }}
-                      >
-                        {w.weight.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-              {participants.length === 0 && (
+                    );
+                  })}
+                </div>
+              ))}
+              {activeParticipants.length === 0 && (
                 <p
                   style={{
                     color: "var(--md-sys-color-outline)",
@@ -424,6 +593,53 @@ function OrganizerView() {
                 </p>
               )}
             </div>
+
+            {/* Hidden participants section */}
+            {hiddenParticipants.length > 0 && (
+              <div style={{ marginTop: "24px" }}>
+                <button
+                  onClick={() => setShowHidden((v) => !v)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--md-sys-color-on-surface-variant)",
+                    fontSize: "0.9rem",
+                    fontWeight: "500",
+                    padding: 0,
+                  }}
+                >
+                  {showHidden ? "▼" : "▶"} Hidden Participants ({hiddenParticipants.length})
+                </button>
+                {showHidden && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "12px" }}>
+                    {hiddenParticipants.map((p) => (
+                      <div
+                        key={p.name}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "8px 16px",
+                          border: "1px solid var(--md-sys-color-surface-variant)",
+                          borderRadius: "8px",
+                          opacity: 0.6,
+                        }}
+                      >
+                        <span>{p.name}</span>
+                        <AppButton
+                          variant="outlined"
+                          onClick={() => handleUnhideParticipant(p.name)}
+                          disabled={hidingName === p.name}
+                        >
+                          {hidingName === p.name ? "..." : "Unhide"}
+                        </AppButton>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -452,9 +668,12 @@ function OrganizerView() {
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                     readOnly={true}
                     showValues={true}
-                    label="Availability"
+                    label={mode === "mixed" ? "In-Person Availability" : "Availability"}
+                    participantDetails={inpersonDetails}
                   />
                 </div>
               )}
@@ -465,9 +684,12 @@ function OrganizerView() {
                     startHour={event.startHour}
                     endHour={event.endHour}
                     selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                     readOnly={true}
                     showValues={true}
-                    label="Availability"
+                    label={mode === "mixed" ? "Virtual Availability" : "Availability"}
+                    participantDetails={virtualDetails}
                   />
                 </div>
               )}
@@ -475,13 +697,13 @@ function OrganizerView() {
           </div>
 
           {/* Individual schedules */}
-          {participants.length > 0 && (
+          {activeParticipants.length > 0 && (
             <div>
               <h3 style={{ margin: "0 0 16px 0", color: "var(--md-sys-color-on-surface)" }}>
                 Individual Schedules
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                {participants.map((p) => {
+                {activeParticipants.map((p) => {
                   const w = weights[p.name] || { weight: 1, included: 1 };
                   return (
                     <div className="md-card" key={p.name} style={{ overflowX: "auto" }}>
@@ -514,9 +736,11 @@ function OrganizerView() {
                               startHour={event.startHour}
                               endHour={event.endHour}
                               selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                               readOnly={true}
                               showValues={true}
-                              label="Availability"
+                              label={mode === "mixed" ? "In-Person" : "Availability"}
                             />
                           </div>
                         )}
@@ -527,9 +751,11 @@ function OrganizerView() {
                               startHour={event.startHour}
                               endHour={event.endHour}
                               selectedDays={event.days}
+                    daySelectionType={event.daySelectionType}
+                    specificDates={event.specificDates}
                               readOnly={true}
                               showValues={true}
-                              label="Availability"
+                              label={mode === "mixed" ? "Virtual" : "Availability"}
                             />
                           </div>
                         )}
@@ -543,7 +769,7 @@ function OrganizerView() {
         </div>
       </div>
 
-      {removeError && (
+      {hideError && (
         <p
           style={{
             color: "var(--md-sys-color-error)",
@@ -551,7 +777,7 @@ function OrganizerView() {
             fontSize: "0.9rem",
           }}
         >
-          {removeError}
+          {hideError}
         </p>
       )}
     </div>

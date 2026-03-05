@@ -86,11 +86,12 @@ describe("POST /api/events", () => {
     expect(res.body.error).toMatch(/password/i);
   });
 
-  test("returns 400 when location is missing for in-person events", async () => {
+  test("defaults location to TBD when not provided for in-person events", async () => {
     const res = await request(app)
       .post("/api/events")
       .send({ name: "Meeting", password: "pw", startHour: 9, endHour: 17, mode: "inperson" });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(201);
+    expect(res.body.event.location).toBe("TBD");
   });
 
   test("rejects mode 'both'", async () => {

@@ -8,6 +8,7 @@ import EventHeader from "@/components/EventHeader";
 import ParticipantView from "@/components/ParticipantView";
 import OrganizerView from "@/components/OrganizerView";
 import AppButton from "@/components/AppButton";
+import { useAuth } from "@/components/AuthContext";
 import { fetchEvent, verifyEvent } from "@/lib/api/events";
 import { DAYS_PER_WEEK } from "@/lib/constants";
 
@@ -15,6 +16,7 @@ function EventPage() {
   const searchParams = useSearchParams();
   const eventCode = searchParams.get("code");
   const managePassword = searchParams.get("manage");
+  const { user } = useAuth();
 
   const [event, setEvent] = useState(null);
   const [isOrganizer, setIsOrganizer] = useState(false);
@@ -32,14 +34,20 @@ function EventPage() {
         const { event: ev } = await fetchEvent(eventCode);
         setEvent(ev);
 
-        if (managePassword) {
+        // Check organizer access: userId match or password verification
+        let isOrg = false;
+        if (user && ev.organizerUserId && ev.organizerUserId === user.id) {
+          isOrg = true;
+        }
+        if (!isOrg && managePassword) {
           try {
             const { valid } = await verifyEvent(eventCode, managePassword);
-            if (valid) setIsOrganizer(true);
+            if (valid) isOrg = true;
           } catch {
             // verification failed — remain as participant
           }
         }
+        setIsOrganizer(isOrg);
       } catch (err) {
         setError(err.message || "Event not found");
       } finally {
@@ -47,7 +55,7 @@ function EventPage() {
       }
     }
     load();
-  }, [eventCode, managePassword]);
+  }, [eventCode, managePassword, user]);
 
   if (loading) {
     return (
@@ -89,7 +97,10 @@ function EventPage() {
     );
   }
 
-  const numSlots = (event.endHour - event.startHour) * DAYS_PER_WEEK;
+  const numDays = event.daySelectionType === "specific_dates" && Array.isArray(event.specificDates)
+    ? event.specificDates.length
+    : DAYS_PER_WEEK;
+  const numSlots = (event.endHour - event.startHour) * numDays;
 
   return (
     <EventContext.Provider value={{ event, isOrganizer, password: managePassword, numSlots }}>

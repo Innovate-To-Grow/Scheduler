@@ -7,6 +7,7 @@ function formatHour(hour) {
 
 function formatMode(mode) {
   if (mode === "virtual") return "Virtual";
+  if (mode === "mixed") return "Mixed";
   return "In-Person";
 }
 

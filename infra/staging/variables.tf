@@ -73,6 +73,22 @@ variable "weights_table_name" {
   default = "scheduler-staging-weights"
 }
 
+variable "users_table_name" {
+  type    = string
+  default = "scheduler-staging-users"
+}
+
+variable "user_events_table_name" {
+  type    = string
+  default = "scheduler-staging-user-events"
+}
+
+variable "jwt_secret" {
+  type      = string
+  sensitive = true
+  default   = "change-me-in-production"
+}
+
 variable "health_check_path" {
   type    = string
   default = "/api/health"

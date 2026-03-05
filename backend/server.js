@@ -1,19 +1,25 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { eventsRouter } from "./routes/events.js";
 import { verifyRouter } from "./routes/verify.js";
 import { participantsRouter } from "./routes/participants.js";
 import { participantsUpdateRouter } from "./routes/participantsUpdate.js";
 import { weightsRouter } from "./routes/weights.js";
 import { healthRouter } from "./routes/health.js";
+import { authRouter } from "./routes/auth.js";
+import { dashboardRouter } from "./routes/dashboard.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 // Route registration — more specific paths first
+app.use("/api/auth", authRouter);
+app.use("/api/dashboard", dashboardRouter);
 app.use("/api/events/verify", verifyRouter);
 app.use("/api/events/participants/update", participantsUpdateRouter);
 app.use("/api/events/participants", participantsRouter);

@@ -12,6 +12,8 @@ const DEFAULT_TABLES = {
   events: process.env.DDB_EVENTS_TABLE || "scheduler-prod-events",
   participants: process.env.DDB_PARTICIPANTS_TABLE || "scheduler-prod-participants",
   weights: process.env.DDB_WEIGHTS_TABLE || "scheduler-prod-weights",
+  users: process.env.DDB_USERS_TABLE || "scheduler-prod-users",
+  userEvents: process.env.DDB_USER_EVENTS_TABLE || "scheduler-prod-user-events",
 };
 
 function isConditionalCheckFailed(err) {
@@ -30,6 +32,11 @@ function mapEvent(item) {
     days: Array.isArray(item.days) ? item.days.map(Number) : [1, 2, 3, 4, 5],
     mode: item.mode || "inperson",
     location: item.location || "",
+    organizerUserId: item.organizerUserId || null,
+    participantVerification: item.participantVerification || "none",
+    participantViewPermission: item.participantViewPermission || "own_only",
+    daySelectionType: item.daySelectionType || "days_of_week",
+    specificDates: item.specificDates || null,
     createdAt: item.createdAt,
   };
 }
@@ -44,6 +51,9 @@ function mapParticipant(item) {
     scheduleInperson: item.scheduleInperson,
     scheduleVirtual: item.scheduleVirtual,
     submitted: Number(item.submitted) ? 1 : 0,
+    hidden: Number(item.hidden) ? 1 : 0,
+    groupName: item.groupName || null,
+    sortOrder: item.sortOrder !== undefined ? Number(item.sortOrder) : null,
     createdAt: item.createdAt,
   };
 }
@@ -93,6 +103,11 @@ export class DynamoSchedulerStore {
       days: event.days,
       mode: event.mode,
       location: event.location || "",
+      organizerUserId: event.organizerUserId || undefined,
+      participantVerification: event.participantVerification || undefined,
+      participantViewPermission: event.participantViewPermission || undefined,
+      daySelectionType: event.daySelectionType || undefined,
+      specificDates: event.specificDates || undefined,
       createdAt: event.createdAt || new Date().toISOString(),
     };
 
@@ -196,6 +211,9 @@ export class DynamoSchedulerStore {
         ? { scheduleVirtual: updates.scheduleVirtual }
         : {}),
       ...(updates.submitted !== undefined ? { submitted: updates.submitted ? 1 : 0 } : {}),
+      ...(updates.hidden !== undefined ? { hidden: updates.hidden ? 1 : 0 } : {}),
+      ...(updates.groupName !== undefined ? { groupName: updates.groupName } : {}),
+      ...(updates.sortOrder !== undefined ? { sortOrder: updates.sortOrder } : {}),
     };
 
     await this.doc.send(
@@ -240,6 +258,93 @@ export class DynamoSchedulerStore {
       })
     );
     return (res.Items || []).map(mapWeight);
+  }
+
+  // --- User methods ---
+
+  async createUser(user) {
+    await this.doc.send(
+      new PutCommand({
+        TableName: this.tables.users,
+        Item: user,
+        ConditionExpression: "attribute_not_exists(userId)",
+      })
+    );
+  }
+
+  async getUserById(userId) {
+    const res = await this.doc.send(
+      new GetCommand({
+        TableName: this.tables.users,
+        Key: { userId },
+      })
+    );
+    return res.Item || null;
+  }
+
+  async getUserByEmail(email) {
+    const res = await this.doc.send(
+      new QueryCommand({
+        TableName: this.tables.users,
+        IndexName: "email-index",
+        KeyConditionExpression: "email = :email",
+        ExpressionAttributeValues: { ":email": email },
+      })
+    );
+    return res.Items?.[0] || null;
+  }
+
+  async updateUser(userId, updates) {
+    const existing = await this.getUserById(userId);
+    if (!existing) return null;
+
+    const next = { ...existing, ...updates };
+    await this.doc.send(
+      new PutCommand({
+        TableName: this.tables.users,
+        Item: next,
+      })
+    );
+    return next;
+  }
+
+  // --- UserEvent methods ---
+
+  async createUserEvent({ userId, eventCode, role }) {
+    await this.doc.send(
+      new PutCommand({
+        TableName: this.tables.userEvents,
+        Item: {
+          userId,
+          eventCode,
+          role,
+          joinedAt: new Date().toISOString(),
+        },
+      })
+    );
+  }
+
+  async listUserEvents(userId) {
+    const res = await this.doc.send(
+      new QueryCommand({
+        TableName: this.tables.userEvents,
+        KeyConditionExpression: "userId = :userId",
+        ExpressionAttributeValues: { ":userId": userId },
+      })
+    );
+    return res.Items || [];
+  }
+
+  async listEventUsers(eventCode) {
+    const res = await this.doc.send(
+      new QueryCommand({
+        TableName: this.tables.userEvents,
+        IndexName: "eventCode-index",
+        KeyConditionExpression: "eventCode = :eventCode",
+        ExpressionAttributeValues: { ":eventCode": eventCode },
+      })
+    );
+    return res.Items || [];
   }
 
   async upsertWeights(eventCode, weights) {

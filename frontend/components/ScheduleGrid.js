@@ -25,10 +25,21 @@ function ScheduleGrid({
   showValues,
   onCellPaint,
   label,
+  participantDetails,
+  daySelectionType,
+  specificDates,
 }) {
   const numHours = endHour - startHour;
-  const days = selectedDays ? DAY_LABELS.filter((_, i) => selectedDays.includes(i)) : DAY_LABELS;
-  const dayIndices = selectedDays ?? [0, 1, 2, 3, 4, 5, 6];
+  const isSpecificDates = daySelectionType === "specific_dates" && Array.isArray(specificDates);
+  const days = isSpecificDates
+    ? specificDates
+    : selectedDays
+      ? DAY_LABELS.filter((_, i) => selectedDays.includes(i))
+      : DAY_LABELS;
+  const numColumns = days.length;
+  const dayIndices = isSpecificDates
+    ? specificDates.map((_, i) => i)
+    : selectedDays ?? [0, 1, 2, 3, 4, 5, 6];
 
   const times = [];
   for (let i = 0; i < numHours; i++) {
@@ -120,12 +131,21 @@ function ScheduleGrid({
               {dayIndices.map((dayIndex, colPos) => (
                 <div key={dayIndex} style={{ display: "flex", flexDirection: "column", flex: 1 }}>
                   {times.map((t, hourIndex) => {
-                    const idx = hourIndex * DAYS_PER_WEEK + dayIndex;
+                    const idx = isSpecificDates
+                      ? hourIndex * numColumns + colPos
+                      : hourIndex * DAYS_PER_WEEK + dayIndex;
                     const val = parseFloat(schedule[idx] || 0);
+                    const tooltip = participantDetails
+                      ? participantDetails
+                          .filter((pd) => pd.schedule[idx] > 0)
+                          .map((pd) => `${pd.name}: ${pd.schedule[idx].toFixed(2)}`)
+                          .join("\n")
+                      : undefined;
                     return (
                       <div
                         key={idx}
                         data-cell-idx={idx}
+                        title={tooltip}
                         onMouseDown={(e) => handleMouse(idx, e)}
                         onMouseMove={(e) => handleMouse(idx, e)}
                         onTouchStart={(e) => {

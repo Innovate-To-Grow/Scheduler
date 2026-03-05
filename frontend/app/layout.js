@@ -1,7 +1,8 @@
 import "./globals.css";
+import { AuthProvider } from "@/components/AuthContext";
 
 export const metadata = {
-  title: "Scheduler",
+  title: "Relevis",
   icons: { icon: "/img/i2glogo.png" },
 };
 
@@ -13,7 +14,9 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

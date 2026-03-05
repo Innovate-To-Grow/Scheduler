@@ -200,15 +200,15 @@ describe("DELETE /api/events/participants/update?code=&name=", () => {
     jest.clearAllMocks();
     schedulerStore.getEvent.mockResolvedValue(EVENT);
     schedulerStore.getParticipant.mockResolvedValue({ participantName: "Dana" });
-    schedulerStore.deleteParticipantAndWeight.mockResolvedValue(undefined);
+    schedulerStore.updateParticipant.mockResolvedValue({ participantName: "Dana", hidden: 1 });
   });
 
-  test("deletes participant and associated weight", async () => {
+  test("soft-deletes (hides) participant", async () => {
     const res = await request(app).delete(
       "/api/events/participants/update?code=EVENT123&name=Dana"
     );
     expect(res.status).toBe(200);
-    expect(schedulerStore.deleteParticipantAndWeight).toHaveBeenCalledWith("EVENT123", "Dana");
+    expect(schedulerStore.updateParticipant).toHaveBeenCalledWith("EVENT123", "Dana", { hidden: 1 });
   });
 
   test("returns 404 for unknown participant", async () => {

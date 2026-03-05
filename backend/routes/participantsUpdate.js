@@ -15,8 +15,11 @@ participantsUpdateRouter.put("/", async (req, res) => {
     const event = await schedulerStore.getEvent(code);
     if (!event) return res.status(404).json({ error: "Event not found" });
 
-    const { scheduleInperson, scheduleVirtual, submitted } = req.body;
-    const expectedLength = (event.endHour - event.startHour) * DAYS_PER_WEEK;
+    const { scheduleInperson, scheduleVirtual, submitted, groupName, sortOrder } = req.body;
+    const numDays = event.daySelectionType === "specific_dates" && Array.isArray(event.specificDates)
+      ? event.specificDates.length
+      : DAYS_PER_WEEK;
+    const expectedLength = (event.endHour - event.startHour) * numDays;
 
     function validateSchedule(schedule, label) {
       let arr = schedule;
@@ -63,6 +66,12 @@ participantsUpdateRouter.put("/", async (req, res) => {
     if (submitted !== undefined) {
       updates.submitted = submitted ? 1 : 0;
     }
+    if (groupName !== undefined) {
+      updates.groupName = groupName;
+    }
+    if (sortOrder !== undefined) {
+      updates.sortOrder = Number(sortOrder);
+    }
 
     if (Object.keys(updates).length === 0) {
       return res.json({ participant: toApiParticipant(existing) });
@@ -77,6 +86,7 @@ participantsUpdateRouter.put("/", async (req, res) => {
   }
 });
 
+// DELETE now soft-deletes (sets hidden: 1) instead of hard-deleting
 participantsUpdateRouter.delete("/", async (req, res) => {
   try {
     const code = req.query.code;
@@ -92,8 +102,33 @@ participantsUpdateRouter.delete("/", async (req, res) => {
       return res.status(404).json({ error: "Participant not found" });
     }
 
-    await schedulerStore.deleteParticipantAndWeight(code, name);
-    return res.json({ success: true, removed: { name } });
+    await schedulerStore.updateParticipant(code, name, { hidden: 1 });
+    return res.json({ success: true, hidden: { name } });
+  } catch (err) {
+    const status = err instanceof SyntaxError ? 400 : 500;
+    const message = status === 500 ? "Internal server error" : err.message;
+    return res.status(status).json({ error: message });
+  }
+});
+
+// PUT ?action=unhide — restore a hidden participant
+participantsUpdateRouter.put("/unhide", async (req, res) => {
+  try {
+    const code = req.query.code;
+    const name = req.query.name;
+    if (!code || !name)
+      return res.status(400).json({ error: "code and name are required" });
+
+    const event = await schedulerStore.getEvent(code);
+    if (!event) return res.status(404).json({ error: "Event not found" });
+
+    const existing = await schedulerStore.getParticipant(code, name);
+    if (!existing) {
+      return res.status(404).json({ error: "Participant not found" });
+    }
+
+    const updated = await schedulerStore.updateParticipant(code, name, { hidden: 0 });
+    return res.json({ participant: toApiParticipant(updated) });
   } catch (err) {
     const status = err instanceof SyntaxError ? 400 : 500;
     const message = status === 500 ? "Internal server error" : err.message;

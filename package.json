@@ -1,5 +1,5 @@
 {
-  "name": "scheduler-monorepo",
+  "name": "relevis-monorepo",
   "private": true,
   "workspaces": ["frontend", "backend"],
   "scripts": {

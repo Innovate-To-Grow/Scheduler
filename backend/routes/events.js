@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { generateEventCode, hashPassword } from "../lib/crypto.js";
+import { optionalAuth } from "../middleware/auth.js";
 import { schedulerStore } from "../lib/store/index.js";
 import { toApiEvent } from "../lib/store/types.js";
 
@@ -19,9 +20,9 @@ eventsRouter.get("/", async (req, res) => {
   }
 });
 
-eventsRouter.post("/", async (req, res) => {
+eventsRouter.post("/", optionalAuth, async (req, res) => {
   try {
-    const { name, password, startHour, endHour, days, mode, location } = req.body;
+    const { name, password, startHour, endHour, days, mode, location, participantVerification, participantViewPermission, daySelectionType, specificDates } = req.body;
 
     const trimmedName = (name || "").trim();
     if (!trimmedName) {
@@ -31,15 +32,18 @@ eventsRouter.post("/", async (req, res) => {
       return res.status(400).json({ error: "Event name too long (max 200)" });
     }
 
-    if (!password || typeof password !== "string" || password.length === 0) {
-      return res.status(400).json({ error: "Password is required" });
+    // Password required only for anonymous event creation
+    if (!req.userId) {
+      if (!password || typeof password !== "string" || password.length === 0) {
+        return res.status(400).json({ error: "Password is required" });
+      }
     }
-    if (password.length > 200) {
+    if (password && password.length > 200) {
       return res.status(400).json({ error: "Password too long (max 200)" });
     }
 
-    if (mode && !["virtual", "inperson"].includes(mode)) {
-      return res.status(400).json({ error: "Invalid mode. Must be 'inperson' or 'virtual'" });
+    if (mode && !["virtual", "inperson", "mixed"].includes(mode)) {
+      return res.status(400).json({ error: "Invalid mode. Must be 'inperson', 'virtual', or 'mixed'" });
     }
 
     const start = startHour !== undefined ? startHour : 9;
@@ -54,19 +58,39 @@ eventsRouter.post("/", async (req, res) => {
       return res.status(400).json({ error: "Days must be integers 0-6" });
     }
     const eventMode = mode || "inperson";
-    const eventLocation = eventMode !== "virtual" ? (location || "").trim() : "";
+    const eventLocation = eventMode !== "virtual" ? (location || "").trim() || "TBD" : "";
 
     if (start >= end || start < 0 || end > 24) {
       return res.status(400).json({ error: "Invalid time range" });
-    }
-    if (eventMode !== "virtual" && !eventLocation) {
-      return res.status(400).json({ error: "Location is required for in-person events" });
     }
     if (eventLocation.length > 500) {
       return res.status(400).json({ error: "Location too long (max 500)" });
     }
 
-    const passwordHash = hashPassword(password);
+    // Day selection type validation
+    const selectionType = daySelectionType || "days_of_week";
+    if (!["days_of_week", "specific_dates"].includes(selectionType)) {
+      return res.status(400).json({ error: "Invalid daySelectionType" });
+    }
+    if (selectionType === "specific_dates") {
+      if (!Array.isArray(specificDates) || specificDates.length === 0) {
+        return res.status(400).json({ error: "specificDates must be a non-empty array" });
+      }
+      if (!specificDates.every((d) => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d))) {
+        return res.status(400).json({ error: "specificDates must be ISO date strings (YYYY-MM-DD)" });
+      }
+    }
+
+    const validVerificationModes = ["none", "login", "email_link", "phone"];
+    if (participantVerification && !validVerificationModes.includes(participantVerification)) {
+      return res.status(400).json({ error: "Invalid participantVerification value" });
+    }
+    const validViewPermissions = ["own_only", "all", "realtime"];
+    if (participantViewPermission && !validViewPermissions.includes(participantViewPermission)) {
+      return res.status(400).json({ error: "Invalid participantViewPermission value" });
+    }
+
+    const passwordHash = password ? hashPassword(password) : null;
 
     let created = false;
     let code = "";
@@ -81,12 +105,26 @@ eventsRouter.post("/", async (req, res) => {
         days: selectedDays,
         mode: eventMode,
         location: eventLocation,
+        organizerUserId: req.userId || null,
+        participantVerification: participantVerification || "none",
+        participantViewPermission: participantViewPermission || "own_only",
+        daySelectionType: selectionType,
+        specificDates: selectionType === "specific_dates" ? specificDates : undefined,
       });
       if (created) break;
     }
 
     if (!created) {
       return res.status(500).json({ error: "Failed to generate unique code" });
+    }
+
+    // Link event to authenticated user
+    if (req.userId) {
+      await schedulerStore.createUserEvent({
+        userId: req.userId,
+        eventCode: code,
+        role: "organizer",
+      });
     }
 
     return res.status(201).json({
